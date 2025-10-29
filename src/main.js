@@ -22,37 +22,55 @@ loader.setDRACOLoader( dracoLoader );
 
 const textureMap = {
   First:{
-    day:'./textures/day/First_texture_set_Day.webp',
-    night:'./textures/night/First_texture_set_Night.webp'
+    day:'/textures/day/First_texture_set_Day.webp',
+    night:'/textures/night/First_texture_set_Night.webp'
   },
   Second:{
-    day:'./textures/day/Second_texture_set_Day.webp',
-    night:'./textures/night/Second_texture_set_Night.webp'
+    day:'/textures/day/Second_texture_set_Day.webp',
+    night:'/textures/night/Second_texture_set_Night.webp'
   }
 };
 
 const loadedTextures = {
-  day:{
-    
-  },
-  night:{},
+  day: {},
+  night: {},
 };
 
-Object.entries(textureMap.First).forEach(([key, paths])=>{
-  const dayTexture = textureLoader.load(paths.day);
-  loadedTextures.day[key] = dayTexture;
+Object.entries(textureMap).forEach(([ textureSet, paths ]) => {
+  console.log(`Loading textures for ${textureSet}...`);
+  
+  const dayTexture = textureLoader.load(
+    paths.day,
+    (texture) => {
+      console.log(`Successfully loaded day texture for ${textureSet}`);
+    },
+    undefined,
+    (error) => {
+      console.error(`Error loading day texture for ${textureSet}:`, error);
+    }
+  );
+  loadedTextures.day[textureSet] = dayTexture;
   dayTexture.flipY = false;
   dayTexture.colorSpace = THREE.SRGBColorSpace;
   
-  const nightTexture = textureLoader.load(paths.night);
-  loadedTextures.night[key] = nightTexture;
+  const nightTexture = textureLoader.load(
+    paths.night,
+    (texture) => {
+      console.log(`Successfully loaded night texture for ${textureSet}`);
+    },
+    undefined,
+    (error) => {
+      console.error(`Error loading night texture for ${textureSet}:`, error);
+    }
+  );
+  loadedTextures.night[textureSet] = nightTexture;
   nightTexture.flipY = false;
   nightTexture.colorSpace = THREE.SRGBColorSpace;
 });
 
 /////////////////////////////SCENE, CAMERA, RENDERER////////////////////////////////////////
 loader.load(
-  './models/temple_test_v10.glb',
+  './models/temple_test_Draco_v11.glb',
   (glb) => {
     glb.scene.traverse((child) => {
       if (child.isMesh) {
@@ -99,7 +117,7 @@ const camera = new THREE.PerspectiveCamera(
 
 
 const renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true });
-renderer.setSize( window.width, window.height );
+renderer.setSize( sizes.width, sizes.height );
 renderer.setPixelRatio( Math.min( window.devicePixelRatio, 2 ) );
 
 

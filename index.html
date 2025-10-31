@@ -54,6 +54,58 @@
         opacity: 0;
         pointer-events: none;
       }
+      
+      /* Mobile Responsive Styles */
+      @media (max-width: 768px) {
+        /* Hide most controls on mobile to keep screen clean */
+        #wiggle-control,
+        #fog-control,
+        #petal-control,
+        #dof-control,
+        #volume-control {
+          display: none !important;
+        }
+        
+        /* Keep essential controls visible but smaller */
+        #theme-toggle,
+        #music-toggle {
+          width: 50px !important;
+          height: 50px !important;
+          font-size: 24px !important;
+        }
+        
+        /* Make camera presets smaller and more compact on mobile */
+        #camera-presets {
+          padding: 8px 12px !important;
+          gap: 6px !important;
+        }
+        
+        .camera-preset-btn {
+          padding: 6px 10px !important;
+          font-size: 10px !important;
+        }
+      }
+      
+      @media (max-width: 480px) {
+        /* Even smaller on very small screens */
+        #theme-toggle,
+        #music-toggle {
+          width: 45px !important;
+          height: 45px !important;
+          font-size: 20px !important;
+        }
+        
+        #camera-presets {
+          bottom: 10px !important;
+          padding: 6px 8px !important;
+          gap: 4px !important;
+        }
+        
+        .camera-preset-btn {
+          padding: 5px 8px !important;
+          font-size: 9px !important;
+        }
+      }
     </style>
   </head>
   <body>

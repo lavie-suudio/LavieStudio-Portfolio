@@ -363,7 +363,7 @@ const camera = new THREE.PerspectiveCamera(
   sizes.width / sizes.height, 
   0.1, 
   1000 );
-  camera.position.set(15, 7.5, 8.1);
+  camera.position.set(13.5, 4, 6);
 
 
 
@@ -394,7 +394,7 @@ controls.minAzimuthAngle = 0;
 controls.maxAzimuthAngle = Math.PI / 1;
 
 controls.update();
-controls.target.set(-0.45, 0.97, -1);
+controls.target.set(1, 1.1, 0.43);
 
 
 /////////////////////////////EVENT LISTENERS////////////////////////////////////////
@@ -414,9 +414,9 @@ window.addEventListener('resize', () => {
 const render = () => {
   controls.update();
 
-  //console.log(camera.position);
-  //console.log("000000000000000");
-  //console.log(controls.target);
+  console.log(camera.position);
+  console.log("000000000000000");
+  console.log(controls.target);
 
   // Animate Lanterns - Wind sway effect
   const time = Date.now() * 0.0025; // Convert to seconds

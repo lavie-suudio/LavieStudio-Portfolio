@@ -57,11 +57,22 @@
       
       /* Mobile Responsive Styles */
       @media (max-width: 768px) {
-        /* Hide most controls on mobile to keep screen clean */
-        #wiggle-control,
-        #fog-control,
-        #petal-control,
-        #dof-control,
+        /* Show hamburger menu on mobile */
+        #mobile-menu-toggle {
+          display: flex !important;
+        }
+        
+        /* Hide desktop settings button on mobile */
+        #settings-toggle {
+          display: none !important;
+        }
+        
+        /* Mobile menu sidebar */
+        #mobile-menu {
+          display: block !important;
+        }
+        
+        /* Hide volume control on mobile */
         #volume-control {
           display: none !important;
         }
@@ -72,14 +83,6 @@
           width: 50px !important;
           height: 50px !important;
           font-size: 24px !important;
-        }
-        
-        /* Settings button smaller on mobile */
-        #settings-toggle {
-          width: 50px !important;
-          height: 50px !important;
-          font-size: 24px !important;
-          top: 90px !important;
         }
         
         /* Make camera presets smaller and more compact on mobile */
@@ -103,13 +106,6 @@
           font-size: 20px !important;
         }
         
-        #settings-toggle {
-          width: 45px !important;
-          height: 45px !important;
-          font-size: 20px !important;
-          top: 80px !important;
-        }
-        
         #camera-presets {
           bottom: 10px !important;
           padding: 6px 8px !important;
@@ -119,6 +115,144 @@
         .camera-preset-btn {
           padding: 5px 8px !important;
           font-size: 9px !important;
+        }
+      }
+      
+      /* Mobile Hamburger Menu */
+      #mobile-menu-toggle {
+        display: none; /* Hidden on desktop */
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        width: 50px;
+        height: 50px;
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        z-index: 1001;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      
+      #mobile-menu-toggle span {
+        width: 22px;
+        height: 2px;
+        background: white;
+        border-radius: 2px;
+        transition: all 0.3s ease;
+      }
+      
+      #mobile-menu-toggle.active span:nth-child(1) {
+        transform: rotate(45deg) translateY(7px);
+      }
+      
+      #mobile-menu-toggle.active span:nth-child(2) {
+        opacity: 0;
+      }
+      
+      #mobile-menu-toggle.active span:nth-child(3) {
+        transform: rotate(-45deg) translateY(-7px);
+      }
+      
+      /* Mobile Menu Sidebar */
+      #mobile-menu {
+        display: none; /* Hidden on desktop */
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 280px;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.95);
+        backdrop-filter: blur(20px);
+        z-index: 1000;
+        overflow-y: auto;
+        padding: 80px 20px 20px 20px;
+        transition: left 0.4s ease;
+        box-shadow: 2px 0 20px rgba(0, 0, 0, 0.5);
+      }
+      
+      #mobile-menu.active {
+        left: 0;
+      }
+      
+      #mobile-menu .mobile-control-section {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      #mobile-menu .mobile-control-section h3 {
+        color: white;
+        font-size: 14px;
+        margin: 0 0 12px 0;
+        font-family: Arial, sans-serif;
+        opacity: 0.9;
+        text-align: center;
+      }
+      
+      #mobile-menu label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 11px;
+        font-family: Arial, sans-serif;
+      }
+      
+      #mobile-menu input[type="range"] {
+        width: 100%;
+        margin: 5px 0;
+      }
+      
+      #mobile-menu .value-display {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 10px;
+        text-align: center;
+        font-family: Arial, sans-serif;
+      }
+      
+      #mobile-menu button {
+        width: 100%;
+        padding: 8px;
+        margin: 5px 0;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        border-radius: 8px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      
+      #mobile-menu button:active {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      
+      /* Overlay for mobile menu */
+      #mobile-menu-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      
+      #mobile-menu-overlay.active {
+        opacity: 1;
+      }
+      
+      @media (max-width: 768px) {
+        #mobile-menu-overlay {
+          display: block;
         }
       }
       
@@ -226,6 +360,77 @@
 
     <div id="experience">
       <canvas id="experience-canvas" class="experience-canvas"></canvas>
+      
+      <!-- Mobile Menu Overlay -->
+      <div id="mobile-menu-overlay"></div>
+      
+      <!-- Mobile Hamburger Menu Button -->
+      <button id="mobile-menu-toggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      
+      <!-- Mobile Menu Sidebar -->
+      <div id="mobile-menu">
+        <!-- Lantern Wiggle -->
+        <div class="mobile-control-section">
+          <h3>🏮 Lantern Wiggle</h3>
+          <input type="range" id="mobile-wiggle-slider" min="0" max="2" step="0.1" value="2">
+          <div class="value-display" id="mobile-wiggle-value">Intensity: 200%</div>
+        </div>
+        
+        <!-- Fog Control -->
+        <div class="mobile-control-section">
+          <h3>🌫️ Atmosphere</h3>
+          <label>Fog</label>
+          <button id="mobile-fog-toggle">ON</button>
+          <label>Density</label>
+          <input type="range" id="mobile-fog-slider" min="0" max="0.1" step="0.005" value="0.04">
+          <div class="value-display" id="mobile-fog-value">40%</div>
+        </div>
+        
+        <!-- Cherry Blossoms -->
+        <div class="mobile-control-section">
+          <h3>🌸 Cherry Blossoms</h3>
+          <label>Wind Strength</label>
+          <input type="range" id="mobile-wind-slider" min="0" max="0.1" step="0.005" value="0.03">
+          <div class="value-display" id="mobile-wind-value">30%</div>
+          
+          <label>Opacity</label>
+          <input type="range" id="mobile-opacity-slider" min="0" max="1" step="0.05" value="0.15">
+          <div class="value-display" id="mobile-opacity-value">15%</div>
+          
+          <label>Amount</label>
+          <input type="range" id="mobile-amount-slider" min="0" max="2000" step="50" value="1000">
+          <div class="value-display" id="mobile-amount-value">1000</div>
+          
+          <label>Direction</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+            <button class="mobile-wind-direction" data-direction="2">← Left</button>
+            <button class="mobile-wind-direction" data-direction="3">→ Right</button>
+          </div>
+        </div>
+        
+        <!-- Depth of Field -->
+        <div class="mobile-control-section">
+          <h3>📷 Depth of Field</h3>
+          <label>Enable</label>
+          <button id="mobile-dof-toggle">ON</button>
+          
+          <label>Focus Distance</label>
+          <input type="range" id="mobile-dof-focus-slider" min="1" max="50" step="0.5" value="12.5">
+          <div class="value-display" id="mobile-dof-focus-value">12.5</div>
+          
+          <label>Blur Intensity</label>
+          <input type="range" id="mobile-dof-aperture-slider" min="0.5" max="8" step="0.1" value="7.5">
+          <div class="value-display" id="mobile-dof-aperture-value">7.5</div>
+          
+          <label>Max Blur</label>
+          <input type="range" id="mobile-dof-blur-slider" min="0.001" max="0.02" step="0.001" value="0.02">
+          <div class="value-display" id="mobile-dof-blur-value">0.020</div>
+        </div>
+      </div>
       
       <!-- Day/Night Toggle Button -->
       <button id="theme-toggle" style="
@@ -652,26 +857,178 @@
         // Start with controls hidden
         experience.classList.add('controls-hidden');
         
-        settingsBtn.addEventListener('click', function() {
-          controlsVisible = !controlsVisible;
+        if (settingsBtn) {
+          settingsBtn.addEventListener('click', function() {
+            controlsVisible = !controlsVisible;
+            
+            if (controlsVisible) {
+              experience.classList.remove('controls-hidden');
+              settingsBtn.style.background = 'rgba(255, 255, 255, 0.2)';
+            } else {
+              experience.classList.add('controls-hidden');
+              settingsBtn.style.background = 'rgba(0, 0, 0, 0.3)';
+            }
+          });
           
-          if (controlsVisible) {
-            experience.classList.remove('controls-hidden');
-            settingsBtn.style.background = 'rgba(255, 255, 255, 0.2)';
+          // Add hover effect
+          settingsBtn.addEventListener('mouseenter', function() {
+            settingsBtn.style.transform = 'scale(1.1)';
+          });
+          
+          settingsBtn.addEventListener('mouseleave', function() {
+            settingsBtn.style.transform = 'scale(1)';
+          });
+        }
+        
+        // Mobile Menu Toggle
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+        
+        function closeMobileMenu() {
+          mobileMenuToggle.classList.remove('active');
+          mobileMenu.classList.remove('active');
+          mobileMenuOverlay.classList.remove('active');
+        }
+        
+        mobileMenuToggle.addEventListener('click', function() {
+          const isActive = mobileMenuToggle.classList.contains('active');
+          
+          if (isActive) {
+            closeMobileMenu();
           } else {
-            experience.classList.add('controls-hidden');
-            settingsBtn.style.background = 'rgba(0, 0, 0, 0.3)';
+            mobileMenuToggle.classList.add('active');
+            mobileMenu.classList.add('active');
+            mobileMenuOverlay.classList.add('active');
           }
         });
         
-        // Add hover effect
-        settingsBtn.addEventListener('mouseenter', function() {
-          settingsBtn.style.transform = 'scale(1.1)';
+        mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+        
+        // Sync mobile controls with desktop controls
+        // Lantern Wiggle
+        const mobileWiggleSlider = document.getElementById('mobile-wiggle-slider');
+        const desktopWiggleSlider = document.getElementById('wiggle-slider');
+        if (mobileWiggleSlider && desktopWiggleSlider) {
+          mobileWiggleSlider.addEventListener('input', function(e) {
+            desktopWiggleSlider.value = e.target.value;
+            desktopWiggleSlider.dispatchEvent(new Event('input'));
+            document.getElementById('mobile-wiggle-value').textContent = `Intensity: ${Math.round(parseFloat(e.target.value) * 100)}%`;
+          });
+        }
+        
+        // Fog Toggle
+        const mobileFogToggle = document.getElementById('mobile-fog-toggle');
+        const desktopFogToggle = document.getElementById('fog-toggle');
+        if (mobileFogToggle && desktopFogToggle) {
+          mobileFogToggle.addEventListener('click', function() {
+            desktopFogToggle.click();
+            mobileFogToggle.textContent = desktopFogToggle.textContent;
+            mobileFogToggle.style.background = desktopFogToggle.style.background;
+          });
+        }
+        
+        // Fog Slider
+        const mobileFogSlider = document.getElementById('mobile-fog-slider');
+        const desktopFogSlider = document.getElementById('fog-slider');
+        if (mobileFogSlider && desktopFogSlider) {
+          mobileFogSlider.addEventListener('input', function(e) {
+            desktopFogSlider.value = e.target.value;
+            desktopFogSlider.dispatchEvent(new Event('input'));
+            document.getElementById('mobile-fog-value').textContent = `${Math.round((parseFloat(e.target.value) / 0.1) * 100)}%`;
+          });
+        }
+        
+        // Wind Strength
+        const mobileWindSlider = document.getElementById('mobile-wind-slider');
+        const desktopWindSlider = document.getElementById('petal-wind-strength');
+        if (mobileWindSlider && desktopWindSlider) {
+          mobileWindSlider.addEventListener('input', function(e) {
+            desktopWindSlider.value = e.target.value;
+            desktopWindSlider.dispatchEvent(new Event('input'));
+            document.getElementById('mobile-wind-value').textContent = `${Math.round((parseFloat(e.target.value) / 0.1) * 100)}%`;
+          });
+        }
+        
+        // Opacity
+        const mobileOpacitySlider = document.getElementById('mobile-opacity-slider');
+        const desktopOpacitySlider = document.getElementById('petal-opacity');
+        if (mobileOpacitySlider && desktopOpacitySlider) {
+          mobileOpacitySlider.addEventListener('input', function(e) {
+            desktopOpacitySlider.value = e.target.value;
+            desktopOpacitySlider.dispatchEvent(new Event('input'));
+            document.getElementById('mobile-opacity-value').textContent = `${Math.round(parseFloat(e.target.value) * 100)}%`;
+          });
+        }
+        
+        // Amount
+        const mobileAmountSlider = document.getElementById('mobile-amount-slider');
+        const desktopAmountSlider = document.getElementById('petal-amount');
+        if (mobileAmountSlider && desktopAmountSlider) {
+          mobileAmountSlider.addEventListener('input', function(e) {
+            desktopAmountSlider.value = e.target.value;
+            desktopAmountSlider.dispatchEvent(new Event('input'));
+            document.getElementById('mobile-amount-value').textContent = e.target.value;
+          });
+        }
+        
+        // Wind Direction
+        const mobileWindDirectionBtns = document.querySelectorAll('.mobile-wind-direction');
+        const desktopWindDirectionBtns = document.querySelectorAll('.wind-direction-btn');
+        mobileWindDirectionBtns.forEach((btn, index) => {
+          btn.addEventListener('click', function() {
+            const direction = btn.getAttribute('data-direction');
+            desktopWindDirectionBtns[index].click();
+            
+            // Visual feedback
+            mobileWindDirectionBtns.forEach(b => b.style.background = 'rgba(255, 255, 255, 0.1)');
+            btn.style.background = 'rgba(100, 200, 255, 0.4)';
+          });
         });
         
-        settingsBtn.addEventListener('mouseleave', function() {
-          settingsBtn.style.transform = 'scale(1)';
-        });
+        // DOF Toggle
+        const mobileDofToggle = document.getElementById('mobile-dof-toggle');
+        const desktopDofToggle = document.getElementById('dof-toggle');
+        if (mobileDofToggle && desktopDofToggle) {
+          mobileDofToggle.addEventListener('click', function() {
+            desktopDofToggle.click();
+            mobileDofToggle.textContent = desktopDofToggle.textContent;
+            mobileDofToggle.style.background = desktopDofToggle.style.background;
+          });
+        }
+        
+        // DOF Focus
+        const mobileDofFocusSlider = document.getElementById('mobile-dof-focus-slider');
+        const desktopDofFocusSlider = document.getElementById('dof-focus-slider');
+        if (mobileDofFocusSlider && desktopDofFocusSlider) {
+          mobileDofFocusSlider.addEventListener('input', function(e) {
+            desktopDofFocusSlider.value = e.target.value;
+            desktopDofFocusSlider.dispatchEvent(new Event('input'));
+            document.getElementById('mobile-dof-focus-value').textContent = parseFloat(e.target.value).toFixed(1);
+          });
+        }
+        
+        // DOF Aperture
+        const mobileDofApertureSlider = document.getElementById('mobile-dof-aperture-slider');
+        const desktopDofApertureSlider = document.getElementById('dof-aperture-slider');
+        if (mobileDofApertureSlider && desktopDofApertureSlider) {
+          mobileDofApertureSlider.addEventListener('input', function(e) {
+            desktopDofApertureSlider.value = e.target.value;
+            desktopDofApertureSlider.dispatchEvent(new Event('input'));
+            document.getElementById('mobile-dof-aperture-value').textContent = parseFloat(e.target.value).toFixed(1);
+          });
+        }
+        
+        // DOF Max Blur
+        const mobileDofBlurSlider = document.getElementById('mobile-dof-blur-slider');
+        const desktopDofBlurSlider = document.getElementById('dof-blur-slider');
+        if (mobileDofBlurSlider && desktopDofBlurSlider) {
+          mobileDofBlurSlider.addEventListener('input', function(e) {
+            desktopDofBlurSlider.value = e.target.value;
+            desktopDofBlurSlider.dispatchEvent(new Event('input'));
+            document.getElementById('mobile-dof-blur-value').textContent = parseFloat(e.target.value).toFixed(3);
+          });
+        }
       });
     </script>
     

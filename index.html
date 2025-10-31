@@ -27,6 +27,17 @@
         animation: none;
       }
       
+      .camera-preset-btn[data-preset="logo"] {
+        background: rgba(100, 200, 255, 0.25) !important;
+        border: 1px solid rgba(100, 200, 255, 0.5) !important;
+      }
+      
+      .camera-preset-btn[data-preset="logo"]:hover {
+        background: rgba(100, 200, 255, 0.45) !important;
+        transform: translateY(-3px) !important;
+        box-shadow: 0 6px 20px rgba(100, 200, 255, 0.4) !important;
+      }
+      
       .camera-preset-btn:hover {
         background: rgba(255, 255, 255, 0.4) !important;
         transform: translateY(-2px);
@@ -60,6 +71,13 @@
         /* Show drawer toggle on mobile */
         #mobile-drawer-toggle {
           display: flex !important;
+          opacity: 0.3;
+          transition: opacity 0.3s ease;
+        }
+        
+        #mobile-drawer-toggle:hover,
+        #mobile-drawer-toggle:active {
+          opacity: 1;
         }
         
         /* Hide desktop settings button on mobile */
@@ -126,7 +144,7 @@
       
       /* Bottom Drawer Toggle Button */
       #mobile-drawer-toggle {
-        display: none; /* Hidden on desktop */
+        display: none !important; /* Always hidden on desktop */
         position: fixed;
         bottom: 20px;
         left: 50%;
@@ -139,7 +157,6 @@
         border-radius: 25px 25px 0 0;
         cursor: pointer;
         z-index: 1100;
-        display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
@@ -466,9 +483,9 @@
           <div class="mobile-slider-container">
             <div class="mobile-slider-label">
               <span>Density</span>
-              <span id="mobile-fog-value">40%</span>
+              <span id="mobile-fog-value">10%</span>
             </div>
-            <input type="range" id="mobile-fog-slider" min="0" max="0.1" step="0.005" value="0.04">
+            <input type="range" id="mobile-fog-slider" min="0" max="0.1" step="0.005" value="0.01">
           </div>
         </div>
         
@@ -486,9 +503,9 @@
           <div class="mobile-slider-container">
             <div class="mobile-slider-label">
               <span>Opacity</span>
-              <span id="mobile-opacity-value">15%</span>
+              <span id="mobile-opacity-value">60%</span>
             </div>
-            <input type="range" id="mobile-opacity-slider" min="0" max="1" step="0.05" value="0.15">
+            <input type="range" id="mobile-opacity-slider" min="0" max="1" step="0.05" value="0.6">
           </div>
           
           <div class="mobile-slider-container">
@@ -666,10 +683,10 @@
             min="0" 
             max="0.1" 
             step="0.005" 
-            value="0.04"
+            value="0.01"
             style="flex: 1; cursor: pointer;"
           >
-          <div id="fog-value" style="font-size: 10px; opacity: 0.6; min-width: 35px; text-align: right;">40%</div>
+          <div id="fog-value" style="font-size: 10px; opacity: 0.6; min-width: 35px; text-align: right;">10%</div>
         </div>
         
         <!-- Fog Color Picker -->
@@ -717,8 +734,8 @@
         <!-- Opacity -->
         <div style="margin-bottom: 5px; display: flex; align-items: center; gap: 8px;">
           <label style="font-size: 10px; opacity: 0.7; flex-shrink: 0; width: 50px;">Opacity</label>
-          <input type="range" id="petal-opacity" min="0" max="1" step="0.05" value="0.15" style="flex: 1; cursor: pointer;">
-          <div id="petal-opacity-value" style="font-size: 10px; opacity: 0.6; min-width: 35px; text-align: right;">15%</div>
+          <input type="range" id="petal-opacity" min="0" max="1" step="0.05" value="0.6" style="flex: 1; cursor: pointer;">
+          <div id="petal-opacity-value" style="font-size: 10px; opacity: 0.6; min-width: 35px; text-align: right;">60%</div>
         </div>
         
         <!-- Amount -->
@@ -1030,7 +1047,7 @@
       transform: translateX(-10px);
     ">
       <span style="color: white; font-size: 18px;">�</span>
-      <input type="range" id="volume-slider" min="0" max="100" value="30" style="
+      <input type="range" id="volume-slider" min="0" max="100" value="10" style="
         width: 100px;
         height: 4px;
         border-radius: 2px;
@@ -1044,7 +1061,7 @@
         font-size: 12px;
         min-width: 35px;
         font-family: 'Arial', sans-serif;
-      ">30%</span>
+      ">10%</span>
     </div>
     
     <!-- Ambience Toggle Button -->
@@ -1069,7 +1086,66 @@
     ">🔔</button>
     </div>
     
+    <!-- Visitor Counter Badge -->
+    <div id="visitor-counter" style="
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 10px 16px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      color: white;
+      font-size: 12px;
+      font-family: Arial, sans-serif;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    ">
+      <span style="font-size: 16px;">👁️</span>
+      <span id="view-count">Loading...</span>
+    </div>
+    
     <script>
+      // Visitor Counter Logic
+      (function() {
+        const counterKey = 'lavieStudioViewCount';
+        const lastVisitKey = 'lavieStudioLastVisit';
+        const counterDisplay = document.getElementById('view-count');
+        
+        // Get current view count
+        let viewCount = parseInt(localStorage.getItem(counterKey) || '0');
+        const lastVisit = localStorage.getItem(lastVisitKey);
+        const now = new Date().getTime();
+        const oneDay = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+        
+        // Only increment if last visit was more than 24 hours ago (unique daily views)
+        if (!lastVisit || (now - parseInt(lastVisit)) > oneDay) {
+          viewCount++;
+          localStorage.setItem(counterKey, viewCount.toString());
+          localStorage.setItem(lastVisitKey, now.toString());
+        }
+        
+        // Display view count with animation
+        if (counterDisplay) {
+          // Animate counting up
+          let currentCount = Math.max(0, viewCount - 10);
+          const increment = Math.ceil(10 / 20);
+          
+          const countInterval = setInterval(() => {
+            currentCount += increment;
+            if (currentCount >= viewCount) {
+              currentCount = viewCount;
+              clearInterval(countInterval);
+            }
+            counterDisplay.textContent = currentCount.toLocaleString() + ' views';
+          }, 30);
+        }
+      })();
+      
       // Settings toggle functionality
       document.addEventListener('DOMContentLoaded', function() {
         const settingsBtn = document.getElementById('settings-toggle');

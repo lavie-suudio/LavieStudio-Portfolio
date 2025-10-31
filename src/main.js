@@ -9,6 +9,10 @@ import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { inject } from '@vercel/analytics';
+
+// Initialize Vercel Analytics
+inject();
 
 const canvas = document.querySelector("#experience-canvas");
 const sizes = {
@@ -242,7 +246,7 @@ function showAboutMe() {
     <h2 style="margin-top: 0; color: #333; font-family: Arial, sans-serif;">About Me</h2>
     
     <p style="color: #666; line-height: 1.6; font-family: Arial, sans-serif;">
-      Hi! I'm Lavie, a passionate 3D artist and creative developer specializing in stunning visual experiences. 
+      Hi! I'm Kirk, a passionate 3D artist and creative developer specializing in stunning visual experiences. 
       With expertise in Blender, Three.js, and web technologies, I create immersive digital art that bridges 
       the gap between traditional art and modern technology.
     </p>
@@ -419,7 +423,7 @@ const scene = new THREE.Scene();
 /////////////////////////////CHERRY BLOSSOM PARTICLES////////////////////////////////
 // Petal control variables
 let petalWindStrength = 0.03; // Default wind strength (30%)
-let petalOpacity = 0.15; // Default opacity
+let petalOpacity = 0.6; // Default opacity (60%)
 let petalAmount = 1000; // Default amount
 let petalWindDirection = 2; // 2 = forward (default), 3 = backward
 
@@ -659,7 +663,7 @@ let currentFogColor = new THREE.Color(0xffd89b);
 
 // Initial fog setup (day mode)
 let fogEnabled = true;
-let fogDensity = 0.04; // Default fog density (40%)
+let fogDensity = 0.01; // Default fog density (10%)
 scene.fog = new THREE.FogExp2(currentFogColor, fogDensity);
 
 // Function to update fog
@@ -1147,7 +1151,7 @@ const volumeValue = document.getElementById('volume-value');
 const bgMusic = new Audio();
 bgMusic.src = '/audio/Aurora Dreams (1).mp3';
 bgMusic.loop = true;
-bgMusic.volume = 0.3; // 30% volume
+bgMusic.volume = 0.1; // 10% volume
 
 let isMusicPlaying = false;
 
@@ -1297,6 +1301,64 @@ ambienceToggle.addEventListener('mouseenter', () => {
 ambienceToggle.addEventListener('mouseleave', () => {
   ambienceToggle.style.transform = 'scale(1)';
   ambienceToggle.style.background = 'rgba(0, 0, 0, 0.3)';
+});
+
+/////////////////////////////PAGE VISIBILITY - PAUSE AUDIO ON TAB SWITCH////////////////////////////////
+// Helper function to fade audio volume
+function fadeAudio(audioElement, targetVolume, duration = 500) {
+  const startVolume = audioElement.volume;
+  const volumeChange = targetVolume - startVolume;
+  const steps = 20; // Number of steps in the fade
+  const stepDuration = duration / steps;
+  const stepChange = volumeChange / steps;
+  
+  let currentStep = 0;
+  
+  const fadeInterval = setInterval(() => {
+    currentStep++;
+    audioElement.volume = Math.max(0, Math.min(1, startVolume + (stepChange * currentStep)));
+    
+    if (currentStep >= steps) {
+      clearInterval(fadeInterval);
+      audioElement.volume = targetVolume;
+      
+      // If fading to 0, pause the audio
+      if (targetVolume === 0) {
+        audioElement.pause();
+      }
+    }
+  }, stepDuration);
+  
+  return fadeInterval;
+}
+
+// Store original volumes
+const originalMusicVolume = bgMusic.volume;
+const originalAmbienceVolume = 0.2;
+
+// Pause music and ambient sounds when user switches to another tab
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    // Tab is hidden - fade out and pause all audio
+    if (isMusicPlaying && !bgMusic.paused) {
+      fadeAudio(bgMusic, 0, 300);
+    }
+    if (currentAmbience && !currentAmbience.paused) {
+      fadeAudio(currentAmbience, 0, 300);
+    }
+  } else {
+    // Tab is visible again - resume and fade in audio if it was playing
+    if (isMusicPlaying) {
+      bgMusic.volume = 0;
+      bgMusic.play().catch(err => console.log('Music resume prevented:', err));
+      fadeAudio(bgMusic, originalMusicVolume, 500);
+    }
+    if (isAmbienceEnabled && currentAmbience) {
+      currentAmbience.volume = 0;
+      currentAmbience.play().catch(err => console.log('Ambience resume prevented:', err));
+      fadeAudio(currentAmbience, originalAmbienceVolume, 500);
+    }
+  }
 });
 
 /////////////////////////////UI SOUND EFFECTS////////////////////////////////

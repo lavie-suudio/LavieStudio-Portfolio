@@ -26,9 +26,110 @@
       #theme-toggle:hover {
         animation: none;
       }
+      
+      .camera-preset-btn:hover {
+        background: rgba(255, 255, 255, 0.4) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+      }
+      
+      .camera-preset-btn:active {
+        transform: translateY(0);
+      }
+      
+      @keyframes progressPulse {
+        0%, 100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+      
+      #loading-screen {
+        transition: opacity 0.5s ease-out;
+      }
+      
+      #loading-screen.fade-out {
+        opacity: 0;
+        pointer-events: none;
+      }
     </style>
   </head>
   <body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    ">
+      <div style="
+        text-align: center;
+        color: white;
+        font-family: Arial, sans-serif;
+      ">
+        <!-- Logo/Title -->
+        <h1 style="
+          font-size: 32px;
+          margin-bottom: 10px;
+          font-weight: 300;
+          letter-spacing: 2px;
+          animation: progressPulse 2s ease-in-out infinite;
+        ">🏮 LavieStudio</h1>
+        
+        <p style="
+          font-size: 14px;
+          opacity: 0.7;
+          margin-bottom: 40px;
+          letter-spacing: 1px;
+        ">Loading your experience...</p>
+        
+        <!-- Progress Bar Container -->
+        <div style="
+          width: 300px;
+          height: 6px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+          overflow: hidden;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        ">
+          <div id="progress-bar" style="
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: width 0.3s ease-out;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.6);
+          "></div>
+        </div>
+        
+        <!-- Percentage Text -->
+        <p id="progress-text" style="
+          margin-top: 15px;
+          font-size: 16px;
+          opacity: 0.9;
+          font-weight: 500;
+        ">0%</p>
+        
+        <!-- Loading Items -->
+        <p id="loading-item" style="
+          margin-top: 10px;
+          font-size: 12px;
+          opacity: 0.6;
+          min-height: 20px;
+        ">Initializing...</p>
+      </div>
+    </div>
+    
     <div id="app"></div>
 
     <div id="experience">
@@ -55,6 +156,376 @@
       ">
         ☀️
       </button>
+      
+      <!-- Lantern Wiggle Slider -->
+      <div id="wiggle-control" style="
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        padding: 15px 20px;
+        border-radius: 15px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        font-family: Arial, sans-serif;
+        min-width: 180px;
+      ">
+        <label for="wiggle-slider" style="
+          display: block;
+          font-size: 12px;
+          margin-bottom: 8px;
+          text-align: center;
+          opacity: 0.9;
+        ">🏮 Lantern Wiggle</label>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <input 
+            type="range" 
+            id="wiggle-slider" 
+            min="0" 
+            max="2" 
+            step="0.1" 
+            value="2"
+            style="flex: 1; cursor: pointer;"
+          >
+          <div id="wiggle-value" style="font-size: 11px; opacity: 0.7; min-width: 45px; text-align: right;">200%</div>
+        </div>
+      </div>
+      
+      <!-- Fog Control -->
+      <div id="fog-control" style="
+        position: fixed;
+        top: 505px;
+        left: 20px;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        padding: 12px 18px;
+        border-radius: 15px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        font-family: Arial, sans-serif;
+        min-width: 180px;
+      ">
+        <label style="
+          display: block;
+          font-size: 12px;
+          margin-bottom: 8px;
+          text-align: center;
+          opacity: 0.9;
+        ">🌫️ Atmosphere</label>
+        
+        <!-- Fog Toggle -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+          <span style="font-size: 11px; opacity: 0.8;">Fog</span>
+          <button id="fog-toggle" style="
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+            padding: 4px 12px;
+            color: white;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+          ">ON</button>
+        </div>
+        
+        <!-- Fog Density Slider -->
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <label style="font-size: 10px; opacity: 0.7; flex-shrink: 0; width: 50px;">Density</label>
+          <input 
+            type="range" 
+            id="fog-slider" 
+            min="0" 
+            max="0.1" 
+            step="0.005" 
+            value="0.04"
+            style="flex: 1; cursor: pointer;"
+          >
+          <div id="fog-value" style="font-size: 10px; opacity: 0.6; min-width: 35px; text-align: right;">40%</div>
+        </div>
+      </div>
+      
+      <!-- Cherry Blossom Controls -->
+      <div id="petal-control" style="
+        position: fixed;
+        top: 300px;
+        right: 20px;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        padding: 12px 18px;
+        border-radius: 15px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        font-family: Arial, sans-serif;
+        min-width: 180px;
+      ">
+        <label style="
+          display: block;
+          font-size: 12px;
+          margin-bottom: 8px;
+          text-align: center;
+          opacity: 0.9;
+        ">🌸 Cherry Blossoms</label>
+        
+        <!-- Wind Strength -->
+        <div style="margin-bottom: 5px; display: flex; align-items: center; gap: 8px;">
+          <label style="font-size: 10px; opacity: 0.7; flex-shrink: 0; width: 50px;">Wind</label>
+          <input type="range" id="petal-wind-strength" min="0" max="0.1" step="0.005" value="0.03" style="flex: 1; cursor: pointer;">
+          <div id="wind-strength-value" style="font-size: 10px; opacity: 0.6; min-width: 35px; text-align: right;">30%</div>
+        </div>
+        
+        <!-- Opacity -->
+        <div style="margin-bottom: 5px; display: flex; align-items: center; gap: 8px;">
+          <label style="font-size: 10px; opacity: 0.7; flex-shrink: 0; width: 50px;">Opacity</label>
+          <input type="range" id="petal-opacity" min="0" max="1" step="0.05" value="0.15" style="flex: 1; cursor: pointer;">
+          <div id="petal-opacity-value" style="font-size: 10px; opacity: 0.6; min-width: 35px; text-align: right;">15%</div>
+        </div>
+        
+        <!-- Amount -->
+        <div style="margin-bottom: 5px; display: flex; align-items: center; gap: 8px;">
+          <label style="font-size: 10px; opacity: 0.7; flex-shrink: 0; width: 50px;">Amount</label>
+          <input type="range" id="petal-amount" min="0" max="2000" step="50" value="1000" style="flex: 1; cursor: pointer;">
+          <div id="petal-amount-value" style="font-size: 10px; opacity: 0.6; min-width: 35px; text-align: right;">1000</div>
+        </div>
+        
+        <!-- Wind Direction -->
+        <div>
+          <label style="font-size: 10px; opacity: 0.7; display: block; margin-bottom: 5px;">Direction</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+            <button class="wind-direction-btn" data-direction="2" style="
+              background: rgba(100, 200, 255, 0.4);
+              border: 1px solid rgba(255, 255, 255, 0.4);
+              border-radius: 8px;
+              padding: 5px;
+              color: white;
+              font-size: 10px;
+              cursor: pointer;
+            ">← Left</button>
+            <button class="wind-direction-btn" data-direction="3" style="
+              background: rgba(255, 255, 255, 0.2);
+              border: 1px solid rgba(255, 255, 255, 0.4);
+              border-radius: 8px;
+              padding: 5px;
+              color: white;
+              font-size: 10px;
+              cursor: pointer;
+            ">Right → </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Depth of Field Controls -->
+      <div id="dof-control" style="
+        position: fixed;
+        top: 100px;
+        left: 20px;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        padding: 12px 18px;
+        border-radius: 15px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        font-family: Arial, sans-serif;
+        min-width: 180px;
+      ">
+        <label style="
+          display: block;
+          font-size: 12px;
+          margin-bottom: 8px;
+          text-align: center;
+          opacity: 0.9;
+        ">📷 Depth of Field</label>
+        
+        <!-- DOF Toggle -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <span style="font-size: 11px; opacity: 0.8;">Enable</span>
+          <button id="dof-toggle" style="
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+            padding: 4px 12px;
+            color: white;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+          ">ON</button>
+        </div>
+        
+        <!-- Focus Distance Slider -->
+        <div style="margin-bottom: 5px; display: flex; align-items: center; gap: 8px;">
+          <label style="font-size: 10px; opacity: 0.7; flex-shrink: 0; width: 45px;">Focus</label>
+          <input 
+            type="range" 
+            id="dof-focus-slider" 
+            min="1" 
+            max="50" 
+            step="0.5" 
+            value="12.5"
+            style="flex: 1; cursor: pointer;"
+          >
+          <div id="dof-focus-value" style="font-size: 10px; opacity: 0.6; min-width: 30px; text-align: right;">12.5</div>
+        </div>
+        
+        <!-- Aperture (Blur Intensity) Slider -->
+        <div style="margin-bottom: 5px; display: flex; align-items: center; gap: 8px;">
+          <label style="font-size: 10px; opacity: 0.7; flex-shrink: 0; width: 45px;">Blur</label>
+          <input 
+            type="range" 
+            id="dof-aperture-slider" 
+            min="0.5" 
+            max="8" 
+            step="0.1" 
+            value="7.5"
+            style="flex: 1; cursor: pointer;"
+          >
+          <div id="dof-aperture-value" style="font-size: 10px; opacity: 0.6; min-width: 30px; text-align: right;">7.5</div>
+        </div>
+        
+        <!-- Max Blur Slider -->
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <label style="font-size: 10px; opacity: 0.7; flex-shrink: 0; width: 45px;">Max</label>
+          <input 
+            type="range" 
+            id="dof-blur-slider" 
+            min="0.001" 
+            max="0.02" 
+            step="0.001" 
+            value="0.02"
+            style="flex: 1; cursor: pointer;"
+          >
+          <div id="dof-blur-value" style="font-size: 10px; opacity: 0.6; min-width: 30px; text-align: right;">0.020</div>
+        </div>
+      </div>
+      
+      <!-- Camera Presets -->
+      <div id="camera-presets" style="
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+        display: flex;
+        gap: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        padding: 12px 20px;
+        border-radius: 25px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+      ">
+        <button class="camera-preset-btn" data-preset="logo" style="
+          background: rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.4);
+          border-radius: 15px;
+          padding: 8px 16px;
+          color: white;
+          font-size: 12px;
+          font-family: Arial, sans-serif;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          white-space: nowrap;
+        ">🎯 Focus Logo</button>
+        
+        <button class="camera-preset-btn" data-preset="wide" style="
+          background: rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.4);
+          border-radius: 15px;
+          padding: 8px 16px;
+          color: white;
+          font-size: 12px;
+          font-family: Arial, sans-serif;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          white-space: nowrap;
+        ">🏞️ Wide View</button>
+        
+        <button class="camera-preset-btn" data-preset="detail" style="
+          background: rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.4);
+          border-radius: 15px;
+          padding: 8px 16px;
+          color: white;
+          font-size: 12px;
+          font-family: Arial, sans-serif;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          white-space: nowrap;
+        ">🔍 Detail View</button>
+        
+        <button class="camera-preset-btn" data-preset="default" style="
+          background: rgba(100, 150, 255, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.5);
+          border-radius: 15px;
+          padding: 8px 16px;
+          color: white;
+          font-size: 12px;
+          font-family: Arial, sans-serif;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          white-space: nowrap;
+        ">🏠 Reset</button>
+      </div>
+      
+      <!-- Music Toggle Button -->
+    <button id="music-toggle" style="
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      color: white;
+      font-size: 28px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    ">�</button>
+
+    <!-- Volume Slider -->
+    <div id="volume-control" style="
+      position: fixed;
+      top: 20px;
+      left: 90px;
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 20px;
+      padding: 10px 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 99;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      transform: translateX(-10px);
+    ">
+      <span style="color: white; font-size: 18px;">�</span>
+      <input type="range" id="volume-slider" min="0" max="100" value="30" style="
+        width: 100px;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.3);
+        outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+      ">
+      <span id="volume-value" style="
+        color: white;
+        font-size: 12px;
+        min-width: 35px;
+        font-family: 'Arial', sans-serif;
+      ">30%</span>
+    </div>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

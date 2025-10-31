@@ -3,6 +3,10 @@ import * as THREE from 'three';
 import { OrbitControls } from './utils/OrbitControls.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 const canvas = document.querySelector("#experience-canvas");
 const sizes = {
@@ -22,25 +26,76 @@ let isNightMode = false;
 let isFading = false; // guard to avoid re-entrancy during fade
 const meshesWithTextures = []; // Store meshes that need texture updates
 
+// Lantern wiggle intensity control
+let lanternWiggleIntensity = 2.0; // Default 200%
+
 const raycaster = new THREE.Raycaster();
 // Increase threshold for larger detection area
 raycaster.params.Points.threshold = 0.5;
 raycaster.params.Line.threshold = 0.5;
 const pointer = new THREE.Vector2();
 
+/////////////////////////////LOADING MANAGER///////////////////////////////////////////////
+const progressBar = document.getElementById('progress-bar');
+const progressText = document.getElementById('progress-text');
+const loadingItem = document.getElementById('loading-item');
+const loadingScreen = document.getElementById('loading-screen');
+
+const loadingManager = new THREE.LoadingManager();
+
+loadingManager.onStart = function(url, itemsLoaded, itemsTotal) {
+  loadingItem.textContent = 'Loading assets...';
+};
+
+loadingManager.onProgress = function(url, itemsLoaded, itemsTotal) {
+  const progress = (itemsLoaded / itemsTotal) * 100;
+  progressBar.style.width = progress + '%';
+  progressText.textContent = Math.round(progress) + '%';
+  
+  // Show what's loading
+  if (url.includes('texture')) {
+    loadingItem.textContent = 'Loading textures...';
+  } else if (url.includes('.glb') || url.includes('.gltf')) {
+    loadingItem.textContent = 'Loading 3D model...';
+  } else if (url.includes('draco')) {
+    loadingItem.textContent = 'Loading decoder...';
+  }
+};
+
+loadingManager.onLoad = function() {
+  progressBar.style.width = '100%';
+  progressText.textContent = '100%';
+  loadingItem.textContent = 'Complete!';
+  
+  // Fade out loading screen after a short delay
+  setTimeout(() => {
+    loadingScreen.classList.add('fade-out');
+    
+    // Remove from DOM after fade completes
+    setTimeout(() => {
+      loadingScreen.style.display = 'none';
+    }, 500);
+  }, 500);
+};
+
+loadingManager.onError = function(url) {
+  loadingItem.textContent = 'Error loading: ' + url;
+  console.error('Error loading:', url);
+};
+
 /////////////////////////////LOADERS///////////////////////////////////////////////
-const textureLoader = new THREE.TextureLoader();
+const textureLoader = new THREE.TextureLoader(loadingManager);
 
 /////////////////////////////MODEL LOADER////////////////////////////////////////
-const dracoLoader = new DRACOLoader();
+const dracoLoader = new DRACOLoader(loadingManager);
 dracoLoader.setDecoderPath( '/draco/' );
 
-const loader = new GLTFLoader();
+const loader = new GLTFLoader(loadingManager);
 loader.setDRACOLoader( dracoLoader );
 
 const textureMap = {
   First:{
-    day:'./textures/day/First_texture_set_Day.webp',
+    day:'./textures/day/First_texture_set_Day_v02.webp',
     night:'./textures/night/First_texture_set_Night.webp',
   },
   Second:{
@@ -358,6 +413,137 @@ function playIntroAnimation() {
 }
 
 const scene = new THREE.Scene();
+
+/////////////////////////////CHERRY BLOSSOM PARTICLES////////////////////////////////
+// Petal control variables
+let petalWindStrength = 0.03; // Default wind strength (30%)
+let petalOpacity = 0.15; // Default opacity
+let petalAmount = 1000; // Default amount
+let petalWindDirection = 2; // 2 = forward (default), 3 = backward
+
+// Create cherry blossom petal geometry
+const petalCount = 2000; // Max count, actual visible controlled by petalAmount
+const petalGeometry = new THREE.BufferGeometry();
+const petalPositions = new Float32Array(petalCount * 3);
+const petalVelocities = [];
+const petalRotations = [];
+const petalRotationSpeeds = [];
+
+// Initialize petal positions and properties
+for (let i = 0; i < petalCount; i++) {
+  // Spread petals across the scene
+  petalPositions[i * 3] = (Math.random() - 0.5) * 40; // X
+  petalPositions[i * 3 + 1] = Math.random() * 15 + 5; // Y (start high)
+  petalPositions[i * 3 + 2] = (Math.random() - 0.5) * 40; // Z
+  
+  // Random velocities for natural movement
+  petalVelocities.push({
+    x: (Math.random() - 0.5) * 0.02,
+    y: -0.01 - Math.random() * 0.02, // Fall downward
+    z: (Math.random() - 0.5) * 0.02
+  });
+  
+  petalRotations.push(Math.random() * Math.PI * 2);
+  petalRotationSpeeds.push((Math.random() - 0.5) * 0.02);
+}
+
+petalGeometry.setAttribute('position', new THREE.BufferAttribute(petalPositions, 3));
+
+// Create petal texture (pink gradient circle)
+const petalCanvas = document.createElement('canvas');
+petalCanvas.width = 32;
+petalCanvas.height = 32;
+const petalCtx = petalCanvas.getContext('2d');
+
+// Draw a soft pink petal shape
+const gradient = petalCtx.createRadialGradient(16, 16, 0, 16, 16, 16);
+gradient.addColorStop(0, 'rgba(255, 182, 193, 1)'); // Light pink center
+gradient.addColorStop(0.5, 'rgba(255, 192, 203, 0.8)');
+gradient.addColorStop(1, 'rgba(255, 192, 203, 0)'); // Transparent edge
+
+petalCtx.fillStyle = gradient;
+petalCtx.fillRect(0, 0, 32, 32);
+
+const petalTexture = new THREE.CanvasTexture(petalCanvas);
+
+// Create material for petals
+const petalMaterial = new THREE.PointsMaterial({
+  size: 0.3,
+  map: petalTexture,
+  transparent: true,
+  opacity: 0.15,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending,
+  vertexColors: false
+});
+
+// Create the particle system
+const cherryBlossomParticles = new THREE.Points(petalGeometry, petalMaterial);
+scene.add(cherryBlossomParticles);
+
+// Function to update petal positions
+function updateCherryBlossoms() {
+  const positions = petalGeometry.attributes.position.array;
+  
+  // Update material opacity
+  petalMaterial.opacity = petalOpacity;
+  
+  for (let i = 0; i < petalCount; i++) {
+    // Hide petals beyond the amount slider
+    if (i >= petalAmount) {
+      positions[i * 3 + 1] = -100; // Move off screen
+      continue;
+    }
+    
+    // Calculate wind direction vector
+    let windX = 0, windZ = 0;
+    switch(petalWindDirection) {
+      case 0: windX = petalWindStrength; break; // Right
+      case 1: windX = -petalWindStrength; break; // Left
+      case 2: windZ = petalWindStrength; break; // Forward
+      case 3: windZ = -petalWindStrength; break; // Backward
+    }
+    
+    // Update position with wind
+    positions[i * 3] += petalVelocities[i].x + windX; // X
+    positions[i * 3 + 1] += petalVelocities[i].y; // Y falling
+    positions[i * 3 + 2] += petalVelocities[i].z + windZ; // Z
+    
+    // Add slight swaying motion
+    positions[i * 3] += Math.sin(Date.now() * 0.001 + i) * 0.003;
+    positions[i * 3 + 2] += Math.cos(Date.now() * 0.001 + i) * 0.005;
+    
+    // Reset petals that fall too low or drift too far
+    if (positions[i * 3 + 1] < -2 || 
+        Math.abs(positions[i * 3]) > 35 || 
+        Math.abs(positions[i * 3 + 2]) > 35) {
+      positions[i * 3 + 1] = 20 + Math.random() * 5;
+      
+      // Spawn on opposite side of wind direction
+      if (petalWindDirection === 0) positions[i * 3] = -30 + Math.random() * 5; // Right wind
+      else if (petalWindDirection === 1) positions[i * 3] = 30 - Math.random() * 5; // Left wind
+      else if (petalWindDirection === 2) positions[i * 3 + 2] = -30 + Math.random() * 5; // Forward wind
+      else if (petalWindDirection === 3) positions[i * 3 + 2] = 30 - Math.random() * 5; // Backward wind
+      
+      if (petalWindDirection === 0 || petalWindDirection === 1) {
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 40;
+      } else {
+        positions[i * 3] = (Math.random() - 0.5) * 40;
+      }
+    }
+    
+    // Keep petals within bounds
+    if (Math.abs(positions[i * 3]) > 40) {
+      petalVelocities[i].x *= -1;
+    }
+    if (Math.abs(positions[i * 3 + 2]) > 40) {
+      petalVelocities[i].z *= -1;
+    }
+  }
+  
+  petalGeometry.attributes.position.needsUpdate = true;
+}
+
 const camera = new THREE.PerspectiveCamera( 
   25, 
   sizes.width / sizes.height, 
@@ -374,6 +560,61 @@ renderer.setPixelRatio( Math.min( window.devicePixelRatio, 2 ) );
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.AgXToneMapping;
 renderer.toneMappingExposure = .5; // Adjust this value to control brightness (higher = brighter)
+
+/////////////////////////////POST-PROCESSING (DEPTH OF FIELD)////////////////////////////////
+// Create composer for post-processing effects
+const composer = new EffectComposer(renderer);
+
+// Add render pass (renders the actual scene)
+const renderPass = new RenderPass(scene, camera);
+composer.addPass(renderPass);
+
+// Add Bokeh (depth of field) pass
+const bokehPass = new BokehPass(scene, camera, {
+  focus: 12.5,      // Distance to focus point (default)
+  aperture: 0.00075,  // Aperture size for blur intensity (7.5 * 0.0001)
+  maxblur: 0.02     // Maximum blur amount
+});
+composer.addPass(bokehPass);
+
+// Add output pass to apply tone mapping and color space conversion
+const outputPass = new OutputPass();
+composer.addPass(outputPass);
+
+// Depth of field control variables
+let dofEnabled = true;
+let dofFocus = 12.5;
+let dofAperture = 0.00075; // 7.5 * 0.0001
+let dofBlur = 0.02;
+
+// Function to update depth of field
+function updateDepthOfField() {
+  bokehPass.uniforms['focus'].value = dofFocus;
+  bokehPass.uniforms['aperture'].value = dofEnabled ? dofAperture : 0.00001;
+  bokehPass.uniforms['maxblur'].value = dofBlur;
+}
+
+/////////////////////////////FOG SETUP////////////////////////////////
+// Fog colors for day and night
+const fogColors = {
+  day: new THREE.Color(0xffd89b), // Golden/warm haze
+  night: new THREE.Color(0x2c3e50) // Cool blue mist
+};
+
+// Initial fog setup (day mode)
+let fogEnabled = true;
+let fogDensity = 0.02; // Default fog density
+scene.fog = new THREE.FogExp2(fogColors.day, fogDensity);
+
+// Function to update fog
+function updateFog() {
+  if (fogEnabled) {
+    const color = isNightMode ? fogColors.night : fogColors.day;
+    scene.fog = new THREE.FogExp2(color, fogDensity);
+  } else {
+    scene.fog = null;
+  }
+}
 
 
 const geometry = new THREE.BoxGeometry( 1, 1, 1 );
@@ -407,6 +648,8 @@ window.addEventListener('resize', () => {
   // Update renderer
   renderer.setSize(sizes.width, sizes.height);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  // Update composer
+  composer.setSize(sizes.width, sizes.height);
 });
 
 //function animate() {}
@@ -418,14 +661,17 @@ const render = () => {
   console.log("000000000000000");
   console.log(controls.target);
 
-  // Animate Lanterns - Wind sway effect
+  // Update cherry blossom petals
+  updateCherryBlossoms();
+
+  // Animate Lanterns - Wind sway effect (controlled by slider)
   const time = Date.now() * 0.0025; // Convert to seconds
   zAxisLantern.forEach((Lantern, index) => {
     // Create a gentle swaying motion like wind
     // Each lantern has a slight offset for more natural movement
     const offset = index * 2.5;
-    Lantern.rotation.z = Math.sin(time + offset) * 0.25; // Sway back and forth
-    Lantern.rotation.x = Math.sin(time * 0.7 + offset) * 0.1; // Slight tilt
+    Lantern.rotation.z = Math.sin(time + offset) * 0.25 * lanternWiggleIntensity; // Sway back and forth
+    Lantern.rotation.x = Math.sin(time * 0.7 + offset) * 0.1 * lanternWiggleIntensity; // Slight tilt
   });
 
 
@@ -462,7 +708,8 @@ const render = () => {
     document.body.style.cursor = 'default';
   }
 
-  renderer.render(scene, camera);
+  // Use composer for post-processing instead of direct render
+  composer.render();
   
   window.requestAnimationFrame(render);
 };
@@ -512,6 +759,8 @@ function toggleDayNight() {
   
   setTimeout(() => {
     swapTexturesForMode(isNightMode);
+    updateFog(); // Update fog color based on day/night mode
+    updateAmbientSound(); // Switch ambient sounds based on day/night mode
     fadeOverlay.style.opacity = '0';
     
     setTimeout(() => {
@@ -535,3 +784,345 @@ themeToggle.addEventListener('mouseleave', () => {
   themeToggle.style.transform = 'scale(1)';
   themeToggle.style.background = 'rgba(0, 0, 0, 0.3)';
 });
+
+/////////////////////////////LANTERN WIGGLE SLIDER////////////////////////////////
+const wiggleSlider = document.getElementById('wiggle-slider');
+const wiggleValue = document.getElementById('wiggle-value');
+
+wiggleSlider.addEventListener('input', (e) => {
+  lanternWiggleIntensity = parseFloat(e.target.value);
+  const percentage = Math.round(lanternWiggleIntensity * 100);
+  wiggleValue.textContent = `Intensity: ${percentage}%`;
+});
+
+/////////////////////////////FOG CONTROLS////////////////////////////////
+const fogToggleBtn = document.getElementById('fog-toggle');
+const fogSlider = document.getElementById('fog-slider');
+const fogValue = document.getElementById('fog-value');
+
+// Fog toggle button
+fogToggleBtn.addEventListener('click', () => {
+  fogEnabled = !fogEnabled;
+  fogToggleBtn.textContent = fogEnabled ? 'ON' : 'OFF';
+  fogToggleBtn.style.background = fogEnabled 
+    ? 'rgba(255, 255, 255, 0.2)' 
+    : 'rgba(255, 0, 0, 0.3)';
+  updateFog();
+});
+
+// Fog density slider
+fogSlider.addEventListener('input', (e) => {
+  fogDensity = parseFloat(e.target.value);
+  const percentage = Math.round((fogDensity / 0.1) * 100);
+  fogValue.textContent = `Density: ${percentage}%`;
+  updateFog();
+});
+
+/////////////////////////////CHERRY BLOSSOM CONTROLS////////////////////////////////
+const petalWindStrengthSlider = document.getElementById('petal-wind-strength');
+const windStrengthValue = document.getElementById('wind-strength-value');
+const petalOpacitySlider = document.getElementById('petal-opacity');
+const petalOpacityValue = document.getElementById('petal-opacity-value');
+const petalAmountSlider = document.getElementById('petal-amount');
+const petalAmountValue = document.getElementById('petal-amount-value');
+const windDirectionBtns = document.querySelectorAll('.wind-direction-btn');
+
+// Wind strength slider
+petalWindStrengthSlider.addEventListener('input', (e) => {
+  petalWindStrength = parseFloat(e.target.value);
+  const percentage = Math.round((petalWindStrength / 0.1) * 100);
+  windStrengthValue.textContent = `${percentage}%`;
+});
+
+// Opacity slider
+petalOpacitySlider.addEventListener('input', (e) => {
+  petalOpacity = parseFloat(e.target.value);
+  const percentage = Math.round(petalOpacity * 100);
+  petalOpacityValue.textContent = `${percentage}%`;
+});
+
+// Amount slider
+petalAmountSlider.addEventListener('input', (e) => {
+  petalAmount = parseInt(e.target.value);
+  petalAmountValue.textContent = petalAmount;
+});
+
+// Wind direction buttons
+windDirectionBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    petalWindDirection = parseInt(btn.getAttribute('data-direction'));
+    
+    // Visual feedback - highlight active button
+    windDirectionBtns.forEach(b => {
+      b.style.background = 'rgba(255, 255, 255, 0.2)';
+    });
+    btn.style.background = 'rgba(100, 200, 255, 0.4)';
+  });
+});
+
+/////////////////////////////CAMERA PRESETS////////////////////////////////
+// Define camera preset positions and targets
+const cameraPresets = {
+  default: {
+    position: { x: 12.5, y: 4.45, z: 3.75 },
+    target: { x: 1.03, y: 1.69, z: 0.29 }
+  },
+  logo: {
+    position: { x: 8, y: 3, z: 2 },
+    target: { x: 0, y: 2, z: 0 }
+  },
+  wide: {
+    position: { x: 18, y: 8, z: 15 },
+    target: { x: 0, y: 2, z: 0 }
+  },
+  detail: {
+    position: { x: 5, y: 2.5, z: 2 },
+    target: { x: 0, y: 1.5, z: 0 }
+  }
+};
+
+let isAnimatingCamera = false;
+
+// Smooth camera animation function
+function animateCameraToPreset(preset) {
+  if (isAnimatingCamera) return;
+  
+  const targetPos = cameraPresets[preset].position;
+  const targetLookAt = cameraPresets[preset].target;
+  
+  const startPos = {
+    x: camera.position.x,
+    y: camera.position.y,
+    z: camera.position.z
+  };
+  
+  const startTarget = {
+    x: controls.target.x,
+    y: controls.target.y,
+    z: controls.target.z
+  };
+  
+  isAnimatingCamera = true;
+  const duration = 1500; // 1.5 seconds
+  const startTime = Date.now();
+  
+  function animate() {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    // Ease-in-out cubic function
+    const eased = progress < 0.5
+      ? 4 * progress * progress * progress
+      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+    
+    // Interpolate camera position
+    camera.position.x = startPos.x + (targetPos.x - startPos.x) * eased;
+    camera.position.y = startPos.y + (targetPos.y - startPos.y) * eased;
+    camera.position.z = startPos.z + (targetPos.z - startPos.z) * eased;
+    
+    // Interpolate camera target
+    controls.target.x = startTarget.x + (targetLookAt.x - startTarget.x) * eased;
+    controls.target.y = startTarget.y + (targetLookAt.y - startTarget.y) * eased;
+    controls.target.z = startTarget.z + (targetLookAt.z - startTarget.z) * eased;
+    
+    controls.update();
+    
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      isAnimatingCamera = false;
+    }
+  }
+  
+  animate();
+}
+
+// Add event listeners to camera preset buttons
+const presetButtons = document.querySelectorAll('.camera-preset-btn');
+presetButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    const preset = button.getAttribute('data-preset');
+    animateCameraToPreset(preset);
+    
+    // Visual feedback
+    presetButtons.forEach(btn => {
+      btn.style.background = 'rgba(255, 255, 255, 0.2)';
+    });
+    button.style.background = 'rgba(100, 200, 255, 0.4)';
+    
+    setTimeout(() => {
+      button.style.background = 'rgba(255, 255, 255, 0.2)';
+    }, 1500);
+  });
+});
+
+/////////////////////////////DEPTH OF FIELD CONTROLS////////////////////////////////
+const dofToggleBtn = document.getElementById('dof-toggle');
+const dofFocusSlider = document.getElementById('dof-focus-slider');
+const dofFocusValue = document.getElementById('dof-focus-value');
+const dofApertureSlider = document.getElementById('dof-aperture-slider');
+const dofApertureValue = document.getElementById('dof-aperture-value');
+const dofBlurSlider = document.getElementById('dof-blur-slider');
+const dofBlurValue = document.getElementById('dof-blur-value');
+
+// DOF toggle button
+dofToggleBtn.addEventListener('click', () => {
+  dofEnabled = !dofEnabled;
+  dofToggleBtn.textContent = dofEnabled ? 'ON' : 'OFF';
+  dofToggleBtn.style.background = dofEnabled 
+    ? 'rgba(255, 255, 255, 0.2)' 
+    : 'rgba(100, 0, 0, 0.3)';
+  updateDepthOfField();
+});
+
+// Focus distance slider
+dofFocusSlider.addEventListener('input', (e) => {
+  dofFocus = parseFloat(e.target.value);
+  dofFocusValue.textContent = dofFocus.toFixed(1);
+  updateDepthOfField();
+});
+
+// Aperture (blur intensity) slider
+dofApertureSlider.addEventListener('input', (e) => {
+  dofAperture = parseFloat(e.target.value) * 0.0001; // Convert to proper scale
+  dofApertureValue.textContent = parseFloat(e.target.value).toFixed(1);
+  updateDepthOfField();
+});
+
+// Max blur slider
+dofBlurSlider.addEventListener('input', (e) => {
+  dofBlur = parseFloat(e.target.value);
+  dofBlurValue.textContent = dofBlur.toFixed(3);
+  updateDepthOfField();
+});
+
+/////////////////////////////BACKGROUND MUSIC////////////////////////////////
+const musicToggle = document.getElementById('music-toggle');
+const volumeControl = document.getElementById('volume-control');
+const volumeSlider = document.getElementById('volume-slider');
+const volumeValue = document.getElementById('volume-value');
+
+// Create audio element
+const bgMusic = new Audio();
+bgMusic.src = '/audio/Aurora Dreams (1).mp3';
+bgMusic.loop = true;
+bgMusic.volume = 0.3; // 30% volume
+
+let isMusicPlaying = false;
+
+// Auto-play music on load (after user interaction with the page)
+window.addEventListener('click', function startMusic() {
+  if (!isMusicPlaying) {
+    bgMusic.play().catch(err => {
+      console.log('Music autoplay was prevented:', err);
+    });
+    musicToggle.textContent = '🔊';
+    isMusicPlaying = true;
+  }
+  // Remove this listener after first click
+  window.removeEventListener('click', startMusic);
+}, { once: true });
+
+function toggleMusic() {
+  if (isMusicPlaying) {
+    bgMusic.pause();
+    musicToggle.textContent = '🔇';
+    isMusicPlaying = false;
+  } else {
+    bgMusic.play().catch(err => {
+      console.log('Music play was prevented:', err);
+    });
+    musicToggle.textContent = '🔊';
+    isMusicPlaying = true;
+  }
+}
+
+// Add click event to music button
+musicToggle.addEventListener('click', toggleMusic);
+
+// Show/hide volume control on hover
+musicToggle.addEventListener('mouseenter', () => {
+  musicToggle.style.transform = 'scale(1.1)';
+  musicToggle.style.background = 'rgba(255, 255, 255, 0.2)';
+  volumeControl.style.opacity = '1';
+  volumeControl.style.pointerEvents = 'auto';
+  volumeControl.style.transform = 'translateX(0)';
+});
+
+const musicControlArea = () => {
+  const musicRect = musicToggle.getBoundingClientRect();
+  const volumeRect = volumeControl.getBoundingClientRect();
+  return {
+    left: musicRect.left,
+    right: volumeRect.right,
+    top: Math.min(musicRect.top, volumeRect.top),
+    bottom: Math.max(musicRect.bottom, volumeRect.bottom)
+  };
+};
+
+document.addEventListener('mousemove', (e) => {
+  const area = musicControlArea();
+  const isInArea = e.clientX >= area.left && e.clientX <= area.right &&
+                   e.clientY >= area.top && e.clientY <= area.bottom;
+  
+  if (!isInArea) {
+    musicToggle.style.transform = 'scale(1)';
+    musicToggle.style.background = 'rgba(0, 0, 0, 0.3)';
+    volumeControl.style.opacity = '0';
+    volumeControl.style.pointerEvents = 'none';
+    volumeControl.style.transform = 'translateX(-10px)';
+  }
+});
+
+// Volume slider control
+volumeSlider.addEventListener('input', (e) => {
+  const volume = parseInt(e.target.value);
+  bgMusic.volume = volume / 100;
+  volumeValue.textContent = `${volume}%`;
+});
+
+/////////////////////////////AMBIENT SOUND EFFECTS////////////////////////////////
+// Create ambient sound elements
+const dayAmbience = new Audio();
+dayAmbience.src = '/audio/day-ambience.mp3'; // Wind chimes, birds, gentle breeze
+dayAmbience.loop = true;
+dayAmbience.volume = 0.2; // 20% volume
+
+const nightAmbience = new Audio();
+nightAmbience.src = '/audio/night-ambience.mp3'; // Crickets, night sounds, soft wind
+nightAmbience.loop = true;
+nightAmbience.volume = 0.2; // 20% volume
+
+let isAmbienceEnabled = true;
+let currentAmbience = null;
+
+// Function to switch ambient sounds based on day/night
+function updateAmbientSound() {
+  if (!isAmbienceEnabled) {
+    dayAmbience.pause();
+    nightAmbience.pause();
+    currentAmbience = null;
+    return;
+  }
+  
+  if (isNightMode) {
+    // Switch to night ambience
+    dayAmbience.pause();
+    dayAmbience.currentTime = 0;
+    nightAmbience.play().catch(err => console.log('Night ambience prevented:', err));
+    currentAmbience = nightAmbience;
+  } else {
+    // Switch to day ambience
+    nightAmbience.pause();
+    nightAmbience.currentTime = 0;
+    dayAmbience.play().catch(err => console.log('Day ambience prevented:', err));
+    currentAmbience = dayAmbience;
+  }
+}
+
+// Auto-start ambient sounds on first user interaction
+window.addEventListener('click', function startAmbience() {
+  if (isAmbienceEnabled) {
+    updateAmbientSound();
+  }
+}, { once: true });

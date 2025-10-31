@@ -363,7 +363,7 @@ const camera = new THREE.PerspectiveCamera(
   sizes.width / sizes.height, 
   0.1, 
   1000 );
-  camera.position.set(13.5, 4, 6);
+  camera.position.set(12.5, 4.45, 3.75);
 
 
 
@@ -394,7 +394,7 @@ controls.minAzimuthAngle = 0;
 controls.maxAzimuthAngle = Math.PI / 1;
 
 controls.update();
-controls.target.set(1, 1.1, 0.43);
+controls.target.set(1.03, 1.69, 0.29);
 
 
 /////////////////////////////EVENT LISTENERS////////////////////////////////////////

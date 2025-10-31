@@ -7,6 +7,8 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 
 const canvas = document.querySelector("#experience-canvas");
 const sizes = {
@@ -554,7 +556,13 @@ const camera = new THREE.PerspectiveCamera(
 
 
 
-const renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true });
+const renderer = new THREE.WebGLRenderer({
+  canvas: canvas, 
+  antialias: true,
+  powerPreference: "high-performance",
+  stencil: false,
+  depth: true
+});
 renderer.setSize( sizes.width, sizes.height );
 renderer.setPixelRatio( Math.min( window.devicePixelRatio, 2 ) );
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -562,8 +570,9 @@ renderer.toneMapping = THREE.AgXToneMapping;
 renderer.toneMappingExposure = .5; // Adjust this value to control brightness (higher = brighter)
 
 /////////////////////////////POST-PROCESSING (DEPTH OF FIELD)////////////////////////////////
-// Create composer for post-processing effects
+// Create composer for post-processing effects with higher quality multisampling
 const composer = new EffectComposer(renderer);
+composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 // Add render pass (renders the actual scene)
 const renderPass = new RenderPass(scene, camera);
@@ -576,6 +585,50 @@ const bokehPass = new BokehPass(scene, camera, {
   maxblur: 0.02     // Maximum blur amount
 });
 composer.addPass(bokehPass);
+
+// Custom color correction shader for contrast and saturation
+const ColorCorrectionShader = {
+  uniforms: {
+    'tDiffuse': { value: null },
+    'contrast': { value: 1.0 },    // Contrast adjustment (1.0 = normal, higher = more contrast)
+    'saturation': { value: 1.25 },   // Saturation adjustment (1.0 = normal, higher = more vivid)
+    'brightness': { value: 1.0 }    // Brightness adjustment (1.0 = normal)
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform float contrast;
+    uniform float saturation;
+    uniform float brightness;
+    varying vec2 vUv;
+    
+    void main() {
+      vec4 color = texture2D(tDiffuse, vUv);
+      
+      // Apply brightness
+      color.rgb *= brightness;
+      
+      // Apply contrast
+      color.rgb = (color.rgb - 0.5) * contrast + 0.5;
+      
+      // Apply saturation
+      vec3 gray = vec3(dot(color.rgb, vec3(0.299, 0.587, 0.114)));
+      color.rgb = mix(gray, color.rgb, saturation);
+      
+      gl_FragColor = color;
+    }
+  `
+};
+
+// Add color correction pass
+const colorCorrectionPass = new ShaderPass(ColorCorrectionShader);
+composer.addPass(colorCorrectionPass);
 
 // Add output pass to apply tone mapping and color space conversion
 const outputPass = new OutputPass();
@@ -601,18 +654,28 @@ const fogColors = {
   night: new THREE.Color(0x2c3e50) // Cool blue mist
 };
 
+// Current fog color (can be customized)
+let currentFogColor = new THREE.Color(0xffd89b);
+
 // Initial fog setup (day mode)
 let fogEnabled = true;
-let fogDensity = 0.02; // Default fog density
-scene.fog = new THREE.FogExp2(fogColors.day, fogDensity);
+let fogDensity = 0.04; // Default fog density (40%)
+scene.fog = new THREE.FogExp2(currentFogColor, fogDensity);
 
 // Function to update fog
 function updateFog() {
   if (fogEnabled) {
-    const color = isNightMode ? fogColors.night : fogColors.day;
-    scene.fog = new THREE.FogExp2(color, fogDensity);
+    scene.fog = new THREE.FogExp2(currentFogColor, fogDensity);
   } else {
     scene.fog = null;
+  }
+}
+
+// Function to update fog color
+function updateFogColor(hexColor) {
+  currentFogColor.set(hexColor);
+  if (fogEnabled && scene.fog) {
+    scene.fog.color.copy(currentFogColor);
   }
 }
 
@@ -648,8 +711,9 @@ window.addEventListener('resize', () => {
   // Update renderer
   renderer.setSize(sizes.width, sizes.height);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  // Update composer
+  // Update composer with pixel ratio for consistent quality
   composer.setSize(sizes.width, sizes.height);
+  composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 });
 
 //function animate() {}
@@ -699,6 +763,12 @@ const render = () => {
       currentObject.scale.x += (1.3 - currentObject.scale.x) * 0.15;
       currentObject.scale.y += (1.3 - currentObject.scale.y) * 0.15;
       currentObject.scale.z += (1.3 - currentObject.scale.z) * 0.15;
+      
+      // Play hover sound when hovering over a new button
+      if (hoveredObject !== currentObject) {
+        play3DButtonHoverSound();
+      }
+      
       hoveredObject = currentObject;
     }
     
@@ -759,7 +829,17 @@ function toggleDayNight() {
   
   setTimeout(() => {
     swapTexturesForMode(isNightMode);
-    updateFog(); // Update fog color based on day/night mode
+    
+    // Update fog color to day/night preset
+    currentFogColor.copy(isNightMode ? fogColors.night : fogColors.day);
+    updateFog(); // Update fog with new color
+    
+    // Update the color picker to match current fog color
+    const fogColorPicker = document.getElementById('fog-color-picker');
+    if (fogColorPicker) {
+      fogColorPicker.value = '#' + currentFogColor.getHexString();
+    }
+    
     updateAmbientSound(); // Switch ambient sounds based on day/night mode
     fadeOverlay.style.opacity = '0';
     
@@ -799,6 +879,7 @@ wiggleSlider.addEventListener('input', (e) => {
 const fogToggleBtn = document.getElementById('fog-toggle');
 const fogSlider = document.getElementById('fog-slider');
 const fogValue = document.getElementById('fog-value');
+const fogColorPicker = document.getElementById('fog-color-picker');
 
 // Fog toggle button
 fogToggleBtn.addEventListener('click', () => {
@@ -816,6 +897,11 @@ fogSlider.addEventListener('input', (e) => {
   const percentage = Math.round((fogDensity / 0.1) * 100);
   fogValue.textContent = `Density: ${percentage}%`;
   updateFog();
+});
+
+// Fog color picker
+fogColorPicker.addEventListener('input', (e) => {
+  updateFogColor(e.target.value);
 });
 
 /////////////////////////////CHERRY BLOSSOM CONTROLS////////////////////////////////
@@ -996,6 +1082,61 @@ dofBlurSlider.addEventListener('input', (e) => {
   updateDepthOfField();
 });
 
+/////////////////////////////COLOR CORRECTION CONTROLS////////////////////////////////
+const contrastSlider = document.getElementById('contrast-slider');
+const contrastValue = document.getElementById('contrast-value');
+const saturationSlider = document.getElementById('saturation-slider');
+const saturationValue = document.getElementById('saturation-value');
+const brightnessSlider = document.getElementById('brightness-slider');
+const brightnessValue = document.getElementById('brightness-value');
+
+// Contrast slider
+contrastSlider.addEventListener('input', (e) => {
+  const value = parseFloat(e.target.value);
+  colorCorrectionPass.uniforms['contrast'].value = value;
+  contrastValue.textContent = value.toFixed(2);
+});
+
+// Saturation slider
+saturationSlider.addEventListener('input', (e) => {
+  const value = parseFloat(e.target.value);
+  colorCorrectionPass.uniforms['saturation'].value = value;
+  saturationValue.textContent = value.toFixed(2);
+});
+
+// Brightness slider
+brightnessSlider.addEventListener('input', (e) => {
+  const value = parseFloat(e.target.value);
+  colorCorrectionPass.uniforms['brightness'].value = value;
+  brightnessValue.textContent = value.toFixed(2);
+});
+
+// Reset button
+const colorResetBtn = document.getElementById('color-reset-btn');
+colorResetBtn.addEventListener('click', () => {
+  // Reset to default values
+  const defaults = {
+    contrast: 1.0,
+    saturation: 1.25,
+    brightness: 1.0
+  };
+  
+  // Update sliders
+  contrastSlider.value = defaults.contrast;
+  saturationSlider.value = defaults.saturation;
+  brightnessSlider.value = defaults.brightness;
+  
+  // Update display values
+  contrastValue.textContent = defaults.contrast.toFixed(2);
+  saturationValue.textContent = defaults.saturation.toFixed(2);
+  brightnessValue.textContent = defaults.brightness.toFixed(2);
+  
+  // Update shader uniforms
+  colorCorrectionPass.uniforms['contrast'].value = defaults.contrast;
+  colorCorrectionPass.uniforms['saturation'].value = defaults.saturation;
+  colorCorrectionPass.uniforms['brightness'].value = defaults.brightness;
+});
+
 /////////////////////////////BACKGROUND MUSIC////////////////////////////////
 const musicToggle = document.getElementById('music-toggle');
 const volumeControl = document.getElementById('volume-control');
@@ -1126,3 +1267,149 @@ window.addEventListener('click', function startAmbience() {
     updateAmbientSound();
   }
 }, { once: true });
+
+/////////////////////////////AMBIENT SOUND MUTE BUTTON////////////////////////////////
+const ambienceToggle = document.getElementById('ambience-toggle');
+
+function toggleAmbience() {
+  isAmbienceEnabled = !isAmbienceEnabled;
+  
+  if (isAmbienceEnabled) {
+    ambienceToggle.textContent = '🔔';
+    updateAmbientSound(); // Resume ambient sound
+  } else {
+    ambienceToggle.textContent = '🔕';
+    dayAmbience.pause();
+    nightAmbience.pause();
+    currentAmbience = null;
+  }
+}
+
+// Add click event to ambience button
+ambienceToggle.addEventListener('click', toggleAmbience);
+
+// Add hover effect to button
+ambienceToggle.addEventListener('mouseenter', () => {
+  ambienceToggle.style.transform = 'scale(1.1)';
+  ambienceToggle.style.background = 'rgba(255, 255, 255, 0.2)';
+});
+
+ambienceToggle.addEventListener('mouseleave', () => {
+  ambienceToggle.style.transform = 'scale(1)';
+  ambienceToggle.style.background = 'rgba(0, 0, 0, 0.3)';
+});
+
+/////////////////////////////UI SOUND EFFECTS////////////////////////////////
+// Create Web Audio API context for sound effects
+let audioContext = null;
+let isAudioInitialized = false;
+
+// Initialize audio context on first user interaction
+function initAudioContext() {
+  if (isAudioInitialized) return;
+  
+  try {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    isAudioInitialized = true;
+    console.log('✅ Audio context initialized');
+  } catch (e) {
+    console.log('Audio not supported:', e);
+  }
+}
+
+// Generate simple beep sounds using Web Audio API
+function playBeep(frequency, duration, volume) {
+  if (!isAudioInitialized || !audioContext) return;
+  
+  try {
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = frequency;
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + duration);
+  } catch (e) {
+    console.log('Beep error:', e);
+  }
+}
+
+// Play sound with rate limiting to avoid spam
+let lastHoverTime = 0;
+let lastClickTime = 0;
+let lastSliderTime = 0;
+
+function playHoverSound() {
+  const now = Date.now();
+  if (now - lastHoverTime > 100) { // Min 100ms between hover sounds
+    playBeep(800, 0.05, 0.05); // 800Hz, 50ms, 5% volume
+    lastHoverTime = now;
+  }
+}
+
+function playClickSound() {
+  const now = Date.now();
+  if (now - lastClickTime > 50) { // Min 50ms between click sounds
+    playBeep(1000, 0.08, 0.08); // 1000Hz, 80ms, 8% volume
+    lastClickTime = now;
+  }
+}
+
+function playSliderSound() {
+  const now = Date.now();
+  if (now - lastSliderTime > 50) { // Min 50ms between slider sounds
+    playBeep(600, 0.03, 0.03); // 600Hz, 30ms, 3% volume
+    lastSliderTime = now;
+  }
+}
+
+// Initialize audio on first user interaction (required by browsers)
+document.addEventListener('click', function initAudioOnce() {
+  initAudioContext();
+  document.removeEventListener('click', initAudioOnce);
+}, { once: true });
+
+// Add sound effects to all buttons
+const allButtons = document.querySelectorAll('button');
+allButtons.forEach(button => {
+  button.addEventListener('mouseenter', () => {
+    if (isAudioInitialized) playHoverSound();
+  });
+  button.addEventListener('click', () => {
+    if (isAudioInitialized) playClickSound();
+  });
+});
+
+// Add sound effects to all sliders
+const allSliders = document.querySelectorAll('input[type="range"]');
+allSliders.forEach(slider => {
+  slider.addEventListener('input', () => {
+    if (isAudioInitialized) playSliderSound();
+  });
+});
+
+// Add sound effects to color picker
+const colorPicker = document.getElementById('fog-color-picker');
+if (colorPicker) {
+  colorPicker.addEventListener('input', () => {
+    if (isAudioInitialized) playSliderSound();
+  });
+}
+
+// Add sound to 3D button hovers in the scene
+let last3DButtonHoverSound = 0;
+function play3DButtonHoverSound() {
+  if (!isAudioInitialized) return;
+  const now = Date.now();
+  if (now - last3DButtonHoverSound > 200) { // Longer delay for 3D buttons
+    playHoverSound();
+    last3DButtonHoverSound = now;
+  }
+}

@@ -79,10 +79,16 @@
         
         /* Keep essential controls visible but smaller */
         #theme-toggle,
-        #music-toggle {
+        #music-toggle,
+        #ambience-toggle {
           width: 50px !important;
           height: 50px !important;
           font-size: 24px !important;
+        }
+        
+        /* Adjust ambience button position on mobile */
+        #ambience-toggle {
+          top: 80px !important;
         }
         
         /* Make camera presets smaller and more compact on mobile */
@@ -329,7 +335,8 @@
       .controls-hidden #wiggle-control,
       .controls-hidden #fog-control,
       .controls-hidden #petal-control,
-      .controls-hidden #dof-control {
+      .controls-hidden #dof-control,
+      .controls-hidden #color-control {
         opacity: 0;
         pointer-events: none;
         transform: translateX(-20px);
@@ -664,6 +671,17 @@
           >
           <div id="fog-value" style="font-size: 10px; opacity: 0.6; min-width: 35px; text-align: right;">40%</div>
         </div>
+        
+        <!-- Fog Color Picker -->
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 5px;">
+          <label style="font-size: 10px; opacity: 0.7; flex-shrink: 0; width: 50px;">Color</label>
+          <input 
+            type="color" 
+            id="fog-color-picker" 
+            value="#ffd89b"
+            style="flex: 1; height: 28px; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 6px; background: transparent;"
+          >
+        </div>
       </div>
       
       <!-- Cherry Blossom Controls -->
@@ -820,6 +838,89 @@
         </div>
       </div>
       
+      <!-- Color Correction Controls -->
+      <div id="color-control" style="
+        position: fixed;
+        top: 350px;
+        left: 20px;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        padding: 12px 18px;
+        border-radius: 15px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        font-family: Arial, sans-serif;
+        min-width: 180px;
+      ">
+        <label style="
+          display: block;
+          font-size: 12px;
+          margin-bottom: 8px;
+          text-align: center;
+          opacity: 0.9;
+        ">🎨 Color Correction</label>
+        
+        <!-- Contrast Slider -->
+        <div style="margin-bottom: 5px; display: flex; align-items: center; gap: 8px;">
+          <label style="font-size: 10px; opacity: 0.7; flex-shrink: 0; width: 55px;">Contrast</label>
+          <input 
+            type="range" 
+            id="contrast-slider" 
+            min="0.5" 
+            max="2.0" 
+            step="0.05" 
+            value="1.0"
+            style="flex: 1; cursor: pointer;"
+          >
+          <div id="contrast-value" style="font-size: 10px; opacity: 0.6; min-width: 30px; text-align: right;">1.00</div>
+        </div>
+        
+        <!-- Saturation Slider -->
+        <div style="margin-bottom: 5px; display: flex; align-items: center; gap: 8px;">
+          <label style="font-size: 10px; opacity: 0.7; flex-shrink: 0; width: 55px;">Saturation</label>
+          <input 
+            type="range" 
+            id="saturation-slider" 
+            min="0.5" 
+            max="2.0" 
+            step="0.05" 
+            value="1.25"
+            style="flex: 1; cursor: pointer;"
+          >
+          <div id="saturation-value" style="font-size: 10px; opacity: 0.6; min-width: 30px; text-align: right;">1.25</div>
+        </div>
+        
+        <!-- Brightness Slider -->
+        <div style="margin-bottom: 5px; display: flex; align-items: center; gap: 8px;">
+          <label style="font-size: 10px; opacity: 0.7; flex-shrink: 0; width: 55px;">Brightness</label>
+          <input 
+            type="range" 
+            id="brightness-slider" 
+            min="0.5" 
+            max="1.5" 
+            step="0.05" 
+            value="1.0"
+            style="flex: 1; cursor: pointer;"
+          >
+          <div id="brightness-value" style="font-size: 10px; opacity: 0.6; min-width: 30px; text-align: right;">1.00</div>
+        </div>
+        
+        <!-- Reset Button -->
+        <button id="color-reset-btn" style="
+          width: 100%;
+          margin-top: 8px;
+          background: rgba(255, 100, 100, 0);
+          border: 1px solid rgba(255, 255, 255, 0.4);
+          border-radius: 8px;
+          padding: 6px 12px;
+          color: white;
+          font-size: 10px;
+          cursor: pointer;
+          transition: all 0.2s;
+        ">Reset to Default</button>
+      </div>
+      
       <!-- Camera Presets -->
       <div id="camera-presets" style="
         position: fixed;
@@ -945,6 +1046,27 @@
         font-family: 'Arial', sans-serif;
       ">30%</span>
     </div>
+    
+    <!-- Ambience Toggle Button -->
+    <button id="ambience-toggle" style="
+      position: fixed;
+      top: 90px;
+      left: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      color: white;
+      font-size: 28px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    ">🔔</button>
     </div>
     
     <script>

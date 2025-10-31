@@ -74,6 +74,14 @@
           font-size: 24px !important;
         }
         
+        /* Settings button smaller on mobile */
+        #settings-toggle {
+          width: 50px !important;
+          height: 50px !important;
+          font-size: 24px !important;
+          top: 90px !important;
+        }
+        
         /* Make camera presets smaller and more compact on mobile */
         #camera-presets {
           padding: 8px 12px !important;
@@ -95,6 +103,13 @@
           font-size: 20px !important;
         }
         
+        #settings-toggle {
+          width: 45px !important;
+          height: 45px !important;
+          font-size: 20px !important;
+          top: 80px !important;
+        }
+        
         #camera-presets {
           bottom: 10px !important;
           padding: 6px 8px !important;
@@ -105,6 +120,31 @@
           padding: 5px 8px !important;
           font-size: 9px !important;
         }
+      }
+      
+      /* Settings Toggle - Hide controls by default */
+      .controls-hidden #wiggle-control,
+      .controls-hidden #fog-control,
+      .controls-hidden #petal-control,
+      .controls-hidden #dof-control {
+        opacity: 0;
+        pointer-events: none;
+        transform: translateX(-20px);
+      }
+      
+      .controls-hidden #wiggle-control {
+        transform: translateX(20px);
+      }
+      
+      .controls-hidden #petal-control {
+        transform: translateX(20px);
+      }
+      
+      #wiggle-control,
+      #fog-control,
+      #petal-control,
+      #dof-control {
+        transition: opacity 0.3s ease, transform 0.3s ease;
       }
     </style>
   </head>
@@ -209,10 +249,32 @@
         ☀️
       </button>
       
-      <!-- Lantern Wiggle Slider -->
-      <div id="wiggle-control" style="
+      <!-- Settings Toggle Button -->
+      <button id="settings-toggle" style="
         position: fixed;
         top: 100px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        cursor: pointer;
+        z-index: 100;
+        font-size: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+      ">
+        ⚙️
+      </button>
+      
+      <!-- Lantern Wiggle Slider -->
+      <div id="wiggle-control" class="control-panel" style="
+        position: fixed;
+        top: 180px;
         right: 20px;
         z-index: 100;
         background: rgba(0, 0, 0, 0.3);
@@ -302,7 +364,7 @@
       <!-- Cherry Blossom Controls -->
       <div id="petal-control" style="
         position: fixed;
-        top: 300px;
+        top: 280px;
         right: 20px;
         z-index: 100;
         background: rgba(0, 0, 0, 0.3);
@@ -579,6 +641,40 @@
       ">30%</span>
     </div>
     </div>
+    
+    <script>
+      // Settings toggle functionality
+      document.addEventListener('DOMContentLoaded', function() {
+        const settingsBtn = document.getElementById('settings-toggle');
+        const experience = document.getElementById('experience');
+        let controlsVisible = false;
+        
+        // Start with controls hidden
+        experience.classList.add('controls-hidden');
+        
+        settingsBtn.addEventListener('click', function() {
+          controlsVisible = !controlsVisible;
+          
+          if (controlsVisible) {
+            experience.classList.remove('controls-hidden');
+            settingsBtn.style.background = 'rgba(255, 255, 255, 0.2)';
+          } else {
+            experience.classList.add('controls-hidden');
+            settingsBtn.style.background = 'rgba(0, 0, 0, 0.3)';
+          }
+        });
+        
+        // Add hover effect
+        settingsBtn.addEventListener('mouseenter', function() {
+          settingsBtn.style.transform = 'scale(1.1)';
+        });
+        
+        settingsBtn.addEventListener('mouseleave', function() {
+          settingsBtn.style.transform = 'scale(1)';
+        });
+      });
+    </script>
+    
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

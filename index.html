@@ -65,7 +65,50 @@
         opacity: 0;
         pointer-events: none;
       }
-      
+
+      /* Bottom Drawer Toggle Button - Default Desktop (Hidden) */
+      #mobile-drawer-toggle {
+        display: none !important; /* Always hidden on desktop */
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 50px;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 25px 25px 0 0;
+        cursor: pointer;
+        z-index: 1100;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        transition: all 0.3s ease;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      #mobile-drawer-toggle::before {
+        content: '';
+        width: 40px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 2px;
+        transition: all 0.3s ease;
+      }
+
+      #mobile-drawer-toggle.active::before {
+        background: rgba(255, 255, 255, 0.8);
+      }
+
+      #mobile-drawer-toggle span {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+      }
+
       /* Mobile Responsive Styles */
       @media (max-width: 768px) {
         /* Show drawer toggle on mobile */
@@ -140,49 +183,6 @@
           padding: 5px 8px !important;
           font-size: 9px !important;
         }
-      }
-      
-      /* Bottom Drawer Toggle Button */
-      #mobile-drawer-toggle {
-        display: none !important; /* Always hidden on desktop */
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 80px;
-        height: 50px;
-        background: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 25px 25px 0 0;
-        cursor: pointer;
-        z-index: 1100;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        transition: all 0.3s ease;
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
-      }
-      
-      #mobile-drawer-toggle::before {
-        content: '';
-        width: 40px;
-        height: 4px;
-        background: rgba(255, 255, 255, 0.5);
-        border-radius: 2px;
-        transition: all 0.3s ease;
-      }
-      
-      #mobile-drawer-toggle.active::before {
-        background: rgba(255, 255, 255, 0.8);
-      }
-      
-      #mobile-drawer-toggle span {
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 10px;
-        font-weight: 600;
-        letter-spacing: 0.5px;
       }
       
       /* Bottom Drawer */

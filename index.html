@@ -50,17 +50,6 @@
         border: 2px solid rgba(255,255,255,0.8);
       }
       
-      .camera-preset-btn[data-preset="left"] {
-        background: rgba(100, 200, 255, 0.25) !important;
-        border: 1px solid rgba(100, 200, 255, 0.5) !important;
-      }
-      
-      .camera-preset-btn[data-preset="left"]:hover {
-        background: rgba(100, 200, 255, 0.45) !important;
-        transform: translateY(-3px) !important;
-        box-shadow: 0 6px 20px rgba(100, 200, 255, 0.4) !important;
-      }
-      
       .camera-preset-btn:hover {
         background: rgba(255, 255, 255, 0.4) !important;
         transform: translateY(-2px);
@@ -93,7 +82,7 @@
       #mobile-drawer-toggle {
         display: none !important; /* Always hidden on desktop */
         position: fixed;
-        bottom: 20px;
+        bottom: 0px;
         left: 50%;
         transform: translateX(-50%);
         width: 80px;
@@ -207,7 +196,7 @@
         }
         
         #camera-presets {
-          bottom: 70px !important; /* Move up to make room for drawer handle */
+          bottom: 50px !important; /* Sits just above the hamburger menu */
           padding: 6px 8px !important;
           gap: 4px !important;
         }
@@ -632,7 +621,7 @@
           width: 100%;
           height: 6px;
           border-radius: 3px;
-          background: linear-gradient(to right, #ffd93d 0%, #1a1a2e 100%);
+          background: linear-gradient(to right, #ff9b3d 0%, #080863 100%);
           outline: none;
           -webkit-appearance: none;
           appearance: none;
@@ -640,7 +629,7 @@
         ">
         <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px; color: rgba(255,255,255,0.9); font-weight: 500;">
           <span>☀️ Day</span>
-          <span>🌙 Night</span>
+          <span>☽ Night</span>
         </div>
       </div>
       

@@ -959,7 +959,7 @@ const cameraPresets = {
     target: { x: 1.03, y: 1.69, z: 0.29 }
   },
   left: {
-    position: { x: 10.6, y: 4, z: 10.6 },  // 45° angle - left side view
+    position: { x: 0, y: 4, z: 10.6 },  // 45° angle - left side view
     target: { x: 0, y: 2, z: 0 }
   },
   front: {
@@ -967,8 +967,8 @@ const cameraPresets = {
     target: { x: 0, y: 2, z: 0 }
   },
   right: {
-    position: { x: 10.6, y: 4, z: -10.6 },  // 135° angle - right side view
-    target: { x: 0, y: 2, z: 0 }
+    position: { x: 0, y: 4, z: -10.6 },  // 135° angle - right side view
+    target: { x: 0, y: 0, z: 0 }
   }
 };
 

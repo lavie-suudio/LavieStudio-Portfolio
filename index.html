@@ -27,12 +27,35 @@
         animation: none;
       }
       
-      .camera-preset-btn[data-preset="logo"] {
+      /* Day/Night slider styling */
+      #day-night-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: white;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        border: 2px solid rgba(255,255,255,0.8);
+      }
+      
+      #day-night-slider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: white;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        border: 2px solid rgba(255,255,255,0.8);
+      }
+      
+      .camera-preset-btn[data-preset="left"] {
         background: rgba(100, 200, 255, 0.25) !important;
         border: 1px solid rgba(100, 200, 255, 0.5) !important;
       }
       
-      .camera-preset-btn[data-preset="logo"]:hover {
+      .camera-preset-btn[data-preset="left"]:hover {
         background: rgba(100, 200, 255, 0.45) !important;
         transform: translateY(-3px) !important;
         box-shadow: 0 6px 20px rgba(100, 200, 255, 0.4) !important;
@@ -139,7 +162,17 @@
         }
         
         /* Keep essential controls visible but smaller */
-        #theme-toggle,
+        #day-night-slider-container {
+          width: 180px !important;
+          padding: 10px !important;
+          top: 15px !important;
+          right: 15px !important;
+        }
+        
+        #day-night-slider-container label {
+          font-size: 11px !important;
+        }
+        
         #music-toggle,
         #ambience-toggle {
           width: 50px !important;
@@ -556,32 +589,10 @@
         </div>
       </div>
       
-      <!-- Day/Night Toggle Button -->
-      <button id="theme-toggle" style="
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        background: rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(10px);
-        cursor: pointer;
-        z-index: 100;
-        font-size: 28px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-      ">
-        ☀️
-      </button>
-      
       <!-- Settings Toggle Button -->
       <button id="settings-toggle" style="
         position: fixed;
-        top: 100px;
+        top: 20px;
         right: 20px;
         width: 60px;
         height: 60px;
@@ -600,10 +611,43 @@
         ⚙️
       </button>
       
+      <!-- Day/Night Slider -->
+      <div id="day-night-slider-container" style="
+        position: fixed;
+        top: 90px;
+        right: 20px;
+        width: 220px;
+        padding: 15px;
+        border-radius: 15px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        z-index: 100;
+        transition: all 0.3s ease;
+      ">
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+          <label style="color: white; font-size: 14px; font-weight: 600;">Day / Night</label>
+        </div>
+        <input type="range" id="day-night-slider" min="0" max="1" value="0" step="0.01" style="
+          width: 100%;
+          height: 6px;
+          border-radius: 3px;
+          background: linear-gradient(to right, #ffd93d 0%, #1a1a2e 100%);
+          outline: none;
+          -webkit-appearance: none;
+          appearance: none;
+          cursor: pointer;
+        ">
+        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px; color: rgba(255,255,255,0.9); font-weight: 500;">
+          <span>☀️ Day</span>
+          <span>🌙 Night</span>
+        </div>
+      </div>
+      
       <!-- Lantern Wiggle Slider -->
       <div id="wiggle-control" class="control-panel" style="
         position: fixed;
-        top: 180px;
+        top: 210px;
         right: 20px;
         z-index: 100;
         background: rgba(0, 0, 0, 0.3);
@@ -639,7 +683,7 @@
       <!-- Fog Control -->
       <div id="fog-control" style="
         position: fixed;
-        top: 505px;
+        top: 450px;
         left: 20px;
         z-index: 100;
         background: rgba(0, 0, 0, 0.3);
@@ -704,7 +748,7 @@
       <!-- Cherry Blossom Controls -->
       <div id="petal-control" style="
         position: fixed;
-        top: 280px;
+        top: 290px;
         right: 20px;
         z-index: 100;
         background: rgba(0, 0, 0, 0.3);
@@ -774,7 +818,7 @@
       <!-- Depth of Field Controls -->
       <div id="dof-control" style="
         position: fixed;
-        top: 100px;
+        top: 150px;
         left: 20px;
         z-index: 100;
         background: rgba(0, 0, 0, 0.3);
@@ -858,7 +902,7 @@
       <!-- Color Correction Controls -->
       <div id="color-control" style="
         position: fixed;
-        top: 350px;
+        top: 295px;
         left: 20px;
         z-index: 100;
         background: rgba(0, 0, 0, 0.3);
@@ -953,7 +997,7 @@
         border-radius: 25px;
         border: 2px solid rgba(255, 255, 255, 0.3);
       ">
-        <button class="camera-preset-btn" data-preset="logo" style="
+        <button class="camera-preset-btn" data-preset="left" style="
           background: rgba(255, 255, 255, 0.2);
           border: 1px solid rgba(255, 255, 255, 0.4);
           border-radius: 15px;
@@ -964,9 +1008,9 @@
           cursor: pointer;
           transition: all 0.3s ease;
           white-space: nowrap;
-        ">🎯 Focus Logo</button>
+        ">◀️ Left</button>
         
-        <button class="camera-preset-btn" data-preset="wide" style="
+        <button class="camera-preset-btn" data-preset="front" style="
           background: rgba(255, 255, 255, 0.2);
           border: 1px solid rgba(255, 255, 255, 0.4);
           border-radius: 15px;
@@ -977,9 +1021,9 @@
           cursor: pointer;
           transition: all 0.3s ease;
           white-space: nowrap;
-        ">🏞️ Wide View</button>
+        ">�️ Front</button>
         
-        <button class="camera-preset-btn" data-preset="detail" style="
+        <button class="camera-preset-btn" data-preset="right" style="
           background: rgba(255, 255, 255, 0.2);
           border: 1px solid rgba(255, 255, 255, 0.4);
           border-radius: 15px;
@@ -990,7 +1034,7 @@
           cursor: pointer;
           transition: all 0.3s ease;
           white-space: nowrap;
-        ">🔍 Detail View</button>
+        ">▶️ Right</button>
         
         <button class="camera-preset-btn" data-preset="default" style="
           background: rgba(100, 150, 255, 0.3);
@@ -1086,66 +1130,8 @@
     ">🔔</button>
     </div>
     
-    <!-- Visitor Counter Badge -->
-    <div id="visitor-counter" style="
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      padding: 10px 16px;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(15px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 20px;
-      color: white;
-      font-size: 12px;
-      font-family: Arial, sans-serif;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    ">
-      <span style="font-size: 16px;">👁️</span>
-      <span id="view-count">Loading...</span>
-    </div>
     
     <script>
-      // Visitor Counter Logic
-      (function() {
-        const counterKey = 'lavieStudioViewCount';
-        const lastVisitKey = 'lavieStudioLastVisit';
-        const counterDisplay = document.getElementById('view-count');
-        
-        // Get current view count
-        let viewCount = parseInt(localStorage.getItem(counterKey) || '0');
-        const lastVisit = localStorage.getItem(lastVisitKey);
-        const now = new Date().getTime();
-        const oneDay = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-        
-        // Only increment if last visit was more than 24 hours ago (unique daily views)
-        if (!lastVisit || (now - parseInt(lastVisit)) > oneDay) {
-          viewCount++;
-          localStorage.setItem(counterKey, viewCount.toString());
-          localStorage.setItem(lastVisitKey, now.toString());
-        }
-        
-        // Display view count with animation
-        if (counterDisplay) {
-          // Animate counting up
-          let currentCount = Math.max(0, viewCount - 10);
-          const increment = Math.ceil(10 / 20);
-          
-          const countInterval = setInterval(() => {
-            currentCount += increment;
-            if (currentCount >= viewCount) {
-              currentCount = viewCount;
-              clearInterval(countInterval);
-            }
-            counterDisplay.textContent = currentCount.toLocaleString() + ' views';
-          }, 30);
-        }
-      })();
-      
       // Settings toggle functionality
       document.addEventListener('DOMContentLoaded', function() {
         const settingsBtn = document.getElementById('settings-toggle');

@@ -822,14 +822,13 @@ function swapTexturesForMode(nightMode) {
 function toggleDayNight() {
   if (isFading) return;
   isFading = true;
-  themeToggle.disabled = true;
 
-  // Update icon
+  // Update state
   isNightMode = !isNightMode;
-  themeToggle.textContent = isNightMode ? '🌙' : '☀️';
 
-  // Quick subtle fade: fade to 30% black, swap instantly, fade back
-  fadeOverlay.style.opacity = '0.3';
+  // Smoother fade: fade to 60% black over 400ms, swap at peak, fade back
+  fadeOverlay.style.transition = 'opacity 0.4s ease-in-out';
+  fadeOverlay.style.opacity = '0.6';
   
   setTimeout(() => {
     swapTexturesForMode(isNightMode);
@@ -848,25 +847,27 @@ function toggleDayNight() {
     fadeOverlay.style.opacity = '0';
     
     setTimeout(() => {
-      themeToggle.disabled = false;
       isFading = false;
       console.log(`Switched to ${isNightMode ? 'night' : 'day'} mode`);
-    }, 200);
-  }, 200);
+    }, 400);
+  }, 400);
 }
 
-// Add click event to toggle button
-themeToggle.addEventListener('click', toggleDayNight);
+// Day/Night slider control
+const dayNightSlider = document.getElementById('day-night-slider');
+let lastSliderState = 0; // 0 = day, 1 = night
 
-// Add hover effect to button
-themeToggle.addEventListener('mouseenter', () => {
-  themeToggle.style.transform = 'scale(1.1)';
-  themeToggle.style.background = 'rgba(255, 255, 255, 0.2)';
-});
-
-themeToggle.addEventListener('mouseleave', () => {
-  themeToggle.style.transform = 'scale(1)';
-  themeToggle.style.background = 'rgba(0, 0, 0, 0.3)';
+dayNightSlider.addEventListener('input', (e) => {
+  const value = parseFloat(e.target.value);
+  
+  // Trigger transition at 0.6 (more towards night side) for smoother feel
+  const currentState = value > 0.6 ? 1 : 0;
+  
+  // Only trigger transition when crossing the threshold
+  if (currentState !== lastSliderState) {
+    lastSliderState = currentState;
+    toggleDayNight();
+  }
 });
 
 /////////////////////////////LANTERN WIGGLE SLIDER////////////////////////////////
@@ -957,17 +958,17 @@ const cameraPresets = {
     position: { x: 12.5, y: 4.45, z: 3.75 },
     target: { x: 1.03, y: 1.69, z: 0.29 }
   },
-  logo: {
-    position: { x: 8, y: 3, z: 2 },
+  left: {
+    position: { x: 10.6, y: 4, z: 10.6 },  // 45° angle - left side view
     target: { x: 0, y: 2, z: 0 }
   },
-  wide: {
-    position: { x: 18, y: 8, z: 15 },
+  front: {
+    position: { x: 15, y: 4, z: 0 },  // Front view - facing temple from X-axis
     target: { x: 0, y: 2, z: 0 }
   },
-  detail: {
-    position: { x: 5, y: 2.5, z: 2 },
-    target: { x: 0, y: 1.5, z: 0 }
+  right: {
+    position: { x: 10.6, y: 4, z: -10.6 },  // 135° angle - right side view
+    target: { x: 0, y: 2, z: 0 }
   }
 };
 
